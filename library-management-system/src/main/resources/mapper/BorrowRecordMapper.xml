@@ -8,6 +8,12 @@
     <select id="selectByCardId" resultType="com.library.entity.BorrowRecord">
         SELECT * FROM borrow_record WHERE card_id = #{cardId}
     </select>
+    <select id="selectByCardIdAndMonth" resultType="com.library.entity.BorrowRecord">
+        SELECT * FROM borrow_record 
+        WHERE card_id = #{cardId} 
+          AND borrow_date >= #{startDate} 
+          AND borrow_date <= #{endDate}
+    </select>
     <select id="selectByCopyId" resultType="com.library.entity.BorrowRecord">
         SELECT * FROM borrow_record WHERE copy_id = #{copyId} AND return_date IS NULL
     </select>

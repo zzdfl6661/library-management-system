@@ -10,6 +10,7 @@ import com.library.entity.LibraryCard;
 import com.library.entity.Student;
 import com.library.enums.BookCopyStatus;
 import com.library.mapper.BookCopyMapper;
+import com.library.mapper.BookMapper;
 import com.library.mapper.BorrowRecordMapper;
 import com.library.mapper.LibraryCardMapper;
 import com.library.mapper.StudentMapper;
@@ -36,6 +37,9 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     @Autowired
     private BookCopyMapper bookCopyMapper;
+
+    @Autowired
+    private BookMapper bookMapper;
 
     @Override
     public StatisticsResponse getDashboardStatistics() {
@@ -78,10 +82,14 @@ public class StatisticsServiceImpl implements StatisticsService {
     @Override
     public List<RankingResponse> getBookBorrowRanking() {
         Map<Long, Integer> bookCountMap = new HashMap<>();
+        LocalDate now = LocalDate.now();
+        LocalDate startOfMonth = now.withDayOfMonth(1);
+        LocalDate endOfMonth = now.withDayOfMonth(now.lengthOfMonth());
+        
         List<BorrowRecord> records = new ArrayList<>();
         List<LibraryCard> cards = libraryCardMapper.selectAll();
         for (LibraryCard card : cards) {
-            records.addAll(borrowRecordMapper.selectByCardId(card.getId()));
+            records.addAll(borrowRecordMapper.selectByCardIdAndMonth(card.getId(), startOfMonth, endOfMonth));
         }
         for (BorrowRecord record : records) {
             BookCopy copy = bookCopyMapper.selectById(record.getCopyId());
@@ -95,7 +103,8 @@ public class StatisticsServiceImpl implements StatisticsService {
                 .limit(10)
                 .forEach(entry -> {
                     RankingResponse r = new RankingResponse();
-                    r.setName("Book-" + entry.getKey());
+                    Book book = bookMapper.selectById(entry.getKey());
+                    r.setName(book != null ? book.getTitle() : "Book-" + entry.getKey());
                     r.setCount(entry.getValue());
                     ranking.add(r);
                 });

@@ -35,10 +35,7 @@ const handleSearch = async () => {
   try {
     const response = await request.get('/books/search', {
       params: {
-        title: searchForm.keyword,
-        author: searchForm.keyword,
-        isbn: searchForm.keyword,
-        publisher: searchForm.keyword
+        keyword: searchForm.keyword
       }
     })
     if (response.code === 200) {

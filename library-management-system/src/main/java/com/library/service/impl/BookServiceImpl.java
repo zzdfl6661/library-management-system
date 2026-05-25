@@ -55,8 +55,8 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public List<Book> searchBooks(String title, String author, String isbn, String publisher) {
-        return bookMapper.search(title, author, isbn, publisher);
+    public List<Book> searchBooks(String keyword) {
+        return bookMapper.searchByKeyword(keyword);
     }
 
     @Override

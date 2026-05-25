@@ -12,6 +12,9 @@ import java.util.List;
 public interface BorrowRecordMapper {
     BorrowRecord selectById(@Param("id") Long id);
     List<BorrowRecord> selectByCardId(@Param("cardId") Long cardId);
+    List<BorrowRecord> selectByCardIdAndMonth(@Param("cardId") Long cardId, 
+                                              @Param("startDate") LocalDate startDate, 
+                                              @Param("endDate") LocalDate endDate);
     List<BorrowRecord> selectByCopyId(@Param("copyId") Long copyId);
     List<BorrowRecord> selectByStudentId(@Param("studentId") Long studentId);
     List<BorrowRecord> selectUnreturnedByCardId(@Param("cardId") Long cardId);

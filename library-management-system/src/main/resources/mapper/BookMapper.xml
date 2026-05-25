@@ -15,6 +15,15 @@
         <if test="isbn != null and isbn != ''">AND isbn LIKE CONCAT('%', #{isbn}, '%')</if>
         <if test="publisher != null and publisher != ''">AND publisher LIKE CONCAT('%', #{publisher}, '%')</if>
     </select>
+    <select id="searchByKeyword" resultType="com.library.entity.Book">
+        SELECT * FROM book WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND (title LIKE CONCAT('%', #{keyword}, '%')
+                 OR author LIKE CONCAT('%', #{keyword}, '%')
+                 OR isbn LIKE CONCAT('%', #{keyword}, '%')
+                 OR publisher LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+    </select>
     <select id="selectAll" resultType="com.library.entity.Book">
         SELECT * FROM book
     </select>

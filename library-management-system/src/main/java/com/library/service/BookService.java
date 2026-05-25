@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface BookService {
     BookDetailResponse getBookDetail(Long id);
-    List<Book> searchBooks(String title, String author, String isbn, String publisher);
+    List<Book> searchBooks(String keyword);
     Book createBook(BookCreateRequest request);
     Book getByIsbn(String isbn);
     List<Book> getAllBooks();

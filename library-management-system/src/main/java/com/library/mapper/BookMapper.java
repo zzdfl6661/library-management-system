@@ -13,6 +13,7 @@ public interface BookMapper {
     Book selectByIsbn(@Param("isbn") String isbn);
     List<Book> search(@Param("title") String title, @Param("author") String author, 
                       @Param("isbn") String isbn, @Param("publisher") String publisher);
+    List<Book> searchByKeyword(@Param("keyword") String keyword);
     List<Book> selectAll();
     int insert(Book book);
     int update(Book book);
