@@ -4,6 +4,7 @@ package com.library.controller;
 import com.library.dto.request.BorrowRequest;
 import com.library.dto.request.ReturnRequest;
 import com.library.dto.response.ApiResponse;
+import com.library.dto.response.BorrowRecordResponse;
 import com.library.entity.BorrowRecord;
 import com.library.service.BorrowService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,14 +33,14 @@ public class BorrowController {
     }
 
     @GetMapping("/card/{cardNo}")
-    public ApiResponse<List<BorrowRecord>> getBorrowRecordsByCardNo(@PathVariable String cardNo) {
-        List<BorrowRecord> records = borrowService.getBorrowRecordsByCardNo(cardNo);
+    public ApiResponse<List<BorrowRecordResponse>> getBorrowRecordsByCardNo(@PathVariable String cardNo) {
+        List<BorrowRecordResponse> records = borrowService.getBorrowRecordsByCardNo(cardNo);
         return ApiResponse.success(records);
     }
 
     @GetMapping("/student/{studentNo}")
-    public ApiResponse<List<BorrowRecord>> getBorrowRecordsByStudentNo(@PathVariable String studentNo) {
-        List<BorrowRecord> records = borrowService.getBorrowRecordsByStudentNo(studentNo);
+    public ApiResponse<List<BorrowRecordResponse>> getBorrowRecordsByStudentNo(@PathVariable String studentNo) {
+        List<BorrowRecordResponse> records = borrowService.getBorrowRecordsByStudentNo(studentNo);
         return ApiResponse.success(records);
     }
 

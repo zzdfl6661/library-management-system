@@ -109,7 +109,10 @@ CREATE INDEX idx_borrow_return_date ON borrow_record(return_date);
 INSERT INTO sys_user (username, password, role, create_time) VALUES
 ('office', '123456', 'OFFICE', NOW()),
 ('circulation', '123456', 'CIRCULATION', NOW()),
-('acquisition', '123456', 'ACQUISITION', NOW());
+('acquisition', '123456', 'ACQUISITION', NOW()),
+('student1', '123456', 'STUDENT', NOW()),
+('student2', '123456', 'STUDENT', NOW()),
+('student3', '123456', 'STUDENT', NOW());
 
 INSERT INTO student (student_no, name, type, max_borrow_count, create_time) VALUES
 ('2021001', 'Zhang San', 'UNDERGRADUATE', 5, NOW()),

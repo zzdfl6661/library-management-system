@@ -73,7 +73,8 @@ const roleName = computed(() => {
   const roles = {
     'OFFICE': '办公室',
     'CIRCULATION': '流通部',
-    'ACQUISITION': '采编部'
+    'ACQUISITION': '采编部',
+    'STUDENT': '读者'
   }
   return roles[role.value] || ''
 })

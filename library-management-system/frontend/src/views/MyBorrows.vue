@@ -32,24 +32,28 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import request from '../utils/request'
 
 const activeTab = ref('current')
-const currentBorrows = ref([
-  { bookTitle: 'Java编程思想', barcode: '97873021056330002', borrowDate: '2024-01-10', dueDate: '2024-02-10', isOverdue: true },
-  { bookTitle: '红楼梦', barcode: '97870100425070003', borrowDate: '2024-01-15', dueDate: '2024-02-15', isOverdue: false }
-])
-const historyBorrows = ref([
-  { bookTitle: '三国演义', barcode: '97870200022070001', borrowDate: '2023-11-01', returnDate: '2023-12-01' },
-  { bookTitle: '算法导论', barcode: '97871110755470001', borrowDate: '2023-10-15', returnDate: '2023-11-15' }
-])
+const allBorrows = ref([])
+
+const currentBorrows = computed(() => {
+  return allBorrows.value.filter(b => !b.returnDate)
+})
+
+const historyBorrows = computed(() => {
+  return allBorrows.value.filter(b => b.returnDate)
+})
 
 onMounted(async () => {
+  const studentNo = localStorage.getItem('username')
+  if (!studentNo) return
+  
   try {
-    const response = await request.get('/borrow/student/2021001')
+    const response = await request.get(`/borrow/student/${studentNo}`)
     if (response.code === 200) {
-      console.log(response.data)
+      allBorrows.value = response.data || []
     }
   } catch (error) {
     console.error('获取借阅记录失败:', error)
