@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.mapper.PaymentRecordMapper">
+    <select id="selectById" resultType="com.library.entity.PaymentRecord">
+        SELECT * FROM payment_record WHERE id = #{id}
+    </select>
+    <select id="selectByStudentId" resultType="com.library.entity.PaymentRecord">
+        SELECT * FROM payment_record WHERE student_id = #{studentId}
+    </select>
+    <insert id="insert" parameterType="com.library.entity.PaymentRecord">
+        INSERT INTO payment_record (student_id, amount, operator_id, create_time)
+        VALUES (#{studentId}, #{amount}, #{operatorId}, #{createTime})
+    </insert>
+    <update id="update" parameterType="com.library.entity.PaymentRecord">
+        UPDATE payment_record SET student_id = #{studentId}, amount = #{amount}, 
+               operator_id = #{operatorId} WHERE id = #{id}
+    </update>
+    <delete id="deleteById">
+        DELETE FROM payment_record WHERE id = #{id}
+    </delete>
+</mapper>

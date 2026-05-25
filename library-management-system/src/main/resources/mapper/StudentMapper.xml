@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.mapper.StudentMapper">
+    <select id="selectById" resultType="com.library.entity.Student">
+        SELECT * FROM student WHERE id = #{id}
+    </select>
+    <select id="selectByStudentNo" resultType="com.library.entity.Student">
+        SELECT * FROM student WHERE student_no = #{studentNo}
+    </select>
+    <select id="selectAll" resultType="com.library.entity.Student">
+        SELECT * FROM student
+    </select>
+    <insert id="insert" parameterType="com.library.entity.Student">
+        INSERT INTO student (student_no, name, type, max_borrow_count, create_time)
+        VALUES (#{studentNo}, #{name}, #{type}, #{maxBorrowCount}, #{createTime})
+    </insert>
+    <update id="update" parameterType="com.library.entity.Student">
+        UPDATE student SET student_no = #{studentNo}, name = #{name}, 
+               type = #{type}, max_borrow_count = #{maxBorrowCount} WHERE id = #{id}
+    </update>
+    <delete id="deleteById">
+        DELETE FROM student WHERE id = #{id}
+    </delete>
+</mapper>

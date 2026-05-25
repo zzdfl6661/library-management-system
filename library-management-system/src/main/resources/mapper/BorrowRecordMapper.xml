@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.mapper.BorrowRecordMapper">
+    <select id="selectById" resultType="com.library.entity.BorrowRecord">
+        SELECT * FROM borrow_record WHERE id = #{id}
+    </select>
+    <select id="selectByCardId" resultType="com.library.entity.BorrowRecord">
+        SELECT * FROM borrow_record WHERE card_id = #{cardId}
+    </select>
+    <select id="selectByCopyId" resultType="com.library.entity.BorrowRecord">
+        SELECT * FROM borrow_record WHERE copy_id = #{copyId} AND return_date IS NULL
+    </select>
+    <select id="selectByStudentId" resultType="com.library.entity.BorrowRecord">
+        SELECT br.* FROM borrow_record br 
+        JOIN library_card lc ON br.card_id = lc.id 
+        WHERE lc.student_id = #{studentId}
+    </select>
+    <select id="selectUnreturnedByCardId" resultType="com.library.entity.BorrowRecord">
+        SELECT * FROM borrow_record WHERE card_id = #{cardId} AND return_date IS NULL
+    </select>
+    <select id="selectCountByCardId" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM borrow_record WHERE card_id = #{cardId} AND return_date IS NULL
+    </select>
+    <select id="selectCountByStudentIdAndMonth" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM borrow_record br 
+        JOIN library_card lc ON br.card_id = lc.id 
+        WHERE lc.student_id = #{studentId} 
+        AND br.borrow_date &gt;= #{startDate} AND br.borrow_date &lt;= #{endDate}
+    </select>
+    <insert id="insert" parameterType="com.library.entity.BorrowRecord">
+        INSERT INTO borrow_record (card_id, copy_id, borrow_date, due_date, is_overdue, create_time)
+        VALUES (#{cardId}, #{copyId}, #{borrowDate}, #{dueDate}, #{isOverdue}, #{createTime})
+    </insert>
+    <update id="update" parameterType="com.library.entity.BorrowRecord">
+        UPDATE borrow_record SET card_id = #{cardId}, copy_id = #{copyId}, 
+               borrow_date = #{borrowDate}, due_date = #{dueDate}, 
+               return_date = #{returnDate}, is_overdue = #{isOverdue} WHERE id = #{id}
+    </update>
+    <delete id="deleteById">
+        DELETE FROM borrow_record WHERE id = #{id}
+    </delete>
+</mapper>

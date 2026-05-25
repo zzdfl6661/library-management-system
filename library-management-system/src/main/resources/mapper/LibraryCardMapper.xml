@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.mapper.LibraryCardMapper">
+    <select id="selectById" resultType="com.library.entity.LibraryCard">
+        SELECT * FROM library_card WHERE id = #{id}
+    </select>
+    <select id="selectByCardNo" resultType="com.library.entity.LibraryCard">
+        SELECT * FROM library_card WHERE card_no = #{cardNo}
+    </select>
+    <select id="selectByStudentId" resultType="com.library.entity.LibraryCard">
+        SELECT * FROM library_card WHERE student_id = #{studentId}
+    </select>
+    <select id="selectAll" resultType="com.library.entity.LibraryCard">
+        SELECT * FROM library_card
+    </select>
+    <insert id="insert" parameterType="com.library.entity.LibraryCard">
+        INSERT INTO library_card (card_no, student_id, status, issue_date, create_time)
+        VALUES (#{cardNo}, #{studentId}, #{status}, #{issueDate}, #{createTime})
+    </insert>
+    <update id="update" parameterType="com.library.entity.LibraryCard">
+        UPDATE library_card SET card_no = #{cardNo}, student_id = #{studentId}, 
+               status = #{status}, issue_date = #{issueDate} WHERE id = #{id}
+    </update>
+    <delete id="deleteById">
+        DELETE FROM library_card WHERE id = #{id}
+    </delete>
+</mapper>

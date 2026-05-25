@@ -1,0 +1,159 @@
+
+package com.library.service.impl;
+
+import com.library.dto.request.BorrowRequest;
+import com.library.dto.request.ReturnRequest;
+import com.library.entity.BookCopy;
+import com.library.entity.BorrowRecord;
+import com.library.entity.FineRecord;
+import com.library.entity.LibraryCard;
+import com.library.entity.Student;
+import com.library.enums.BookCopyStatus;
+import com.library.enums.CardStatus;
+import com.library.exception.BusinessException;
+import com.library.mapper.BookCopyMapper;
+import com.library.mapper.BorrowRecordMapper;
+import com.library.mapper.FineRecordMapper;
+import com.library.mapper.LibraryCardMapper;
+import com.library.mapper.StudentMapper;
+import com.library.service.BorrowService;
+import com.library.util.DateUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+public class BorrowServiceImpl implements BorrowService {
+
+    private static final int BORROW_DAYS = 30;
+    private static final BigDecimal FINE_PER_DAY = new BigDecimal("0.1");
+
+    @Autowired
+    private LibraryCardMapper libraryCardMapper;
+
+    @Autowired
+    private StudentMapper studentMapper;
+
+    @Autowired
+    private BookCopyMapper bookCopyMapper;
+
+    @Autowired
+    private BorrowRecordMapper borrowRecordMapper;
+
+    @Autowired
+    private FineRecordMapper fineRecordMapper;
+
+    @Override
+    @Transactional
+    public void borrowBooks(BorrowRequest request) {
+        LibraryCard card = libraryCardMapper.selectByCardNo(request.getCardNo());
+        if (card == null) {
+            throw new BusinessException("借书证不存在");
+        }
+        if (!CardStatus.NORMAL.name().equals(card.getStatus())) {
+            throw new BusinessException("借书证状态异常");
+        }
+        BigDecimal totalFine = fineRecordMapper.selectUnpaidTotalByStudentId(card.getStudentId());
+        if (totalFine.compareTo(new BigDecimal("50")) > 0) {
+            throw new BusinessException("累计罚款超过50元，无法借书");
+        }
+        Student student = studentMapper.selectById(card.getStudentId());
+        int borrowedCount = borrowRecordMapper.selectCountByCardId(card.getId());
+        if (borrowedCount >= student.getMaxBorrowCount()) {
+            throw new BusinessException("已达到最大借书数量限制");
+        }
+        LocalDate today = LocalDate.now();
+        LocalDate dueDate = today.plusDays(BORROW_DAYS);
+        for (String barcode : request.getBarcodes()) {
+            BookCopy bookCopy = bookCopyMapper.selectByBarcode(barcode);
+            if (bookCopy == null) {
+                throw new BusinessException("图书副本不存在: " + barcode);
+            }
+            if (!BookCopyStatus.AVAILABLE.name().equals(bookCopy.getStatus())) {
+                throw new BusinessException("图书不可借: " + barcode);
+            }
+            BorrowRecord record = new BorrowRecord();
+            record.setCardId(card.getId());
+            record.setCopyId(bookCopy.getId());
+            record.setBorrowDate(today);
+            record.setDueDate(dueDate);
+            record.setIsOverdue(0);
+            record.setCreateTime(LocalDateTime.now());
+            borrowRecordMapper.insert(record);
+            bookCopy.setStatus(BookCopyStatus.BORROWED.name());
+            bookCopyMapper.update(bookCopy);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void returnBook(ReturnRequest request) {
+        BookCopy bookCopy = bookCopyMapper.selectByBarcode(request.getBarcode());
+        if (bookCopy == null) {
+            throw new BusinessException("图书副本不存在");
+        }
+        List<BorrowRecord> records = borrowRecordMapper.selectByCopyId(bookCopy.getId());
+        if (records.isEmpty()) {
+            throw new BusinessException("未找到借阅记录");
+        }
+        BorrowRecord record = records.get(0);
+        LocalDate today = LocalDate.now();
+        LocalDate dueDate = record.getDueDate();
+        if (today.isAfter(dueDate)) {
+            long days = DateUtil.daysBetween(dueDate, today);
+            BigDecimal amount = FINE_PER_DAY.multiply(new BigDecimal(days));
+            LibraryCard card = libraryCardMapper.selectById(record.getCardId());
+            FineRecord fine = new FineRecord();
+            fine.setStudentId(card.getStudentId());
+            fine.setBorrowRecordId(record.getId());
+            fine.setAmount(amount);
+            fine.setDays((int) days);
+            fine.setIsPaid(0);
+            fine.setCreateTime(LocalDateTime.now());
+            fineRecordMapper.insert(fine);
+            record.setIsOverdue(1);
+        }
+        record.setReturnDate(today);
+        borrowRecordMapper.update(record);
+        bookCopy.setStatus(BookCopyStatus.AVAILABLE.name());
+        bookCopyMapper.update(bookCopy);
+    }
+
+    @Override
+    public List<BorrowRecord> getBorrowRecordsByCardNo(String cardNo) {
+        LibraryCard card = libraryCardMapper.selectByCardNo(cardNo);
+        if (card == null) {
+            throw new BusinessException("借书证不存在");
+        }
+        return borrowRecordMapper.selectByCardId(card.getId());
+    }
+
+    @Override
+    public List<BorrowRecord> getBorrowRecordsByStudentNo(String studentNo) {
+        Student student = studentMapper.selectByStudentNo(studentNo);
+        if (student == null) {
+            throw new BusinessException("学生不存在");
+        }
+        return borrowRecordMapper.selectByStudentId(student.getId());
+    }
+
+    @Override
+    public boolean canBorrow(String cardNo) {
+        LibraryCard card = libraryCardMapper.selectByCardNo(cardNo);
+        if (card == null || !CardStatus.NORMAL.name().equals(card.getStatus())) {
+            return false;
+        }
+        BigDecimal totalFine = fineRecordMapper.selectUnpaidTotalByStudentId(card.getStudentId());
+        if (totalFine.compareTo(new BigDecimal("50")) > 0) {
+            return false;
+        }
+        Student student = studentMapper.selectById(card.getStudentId());
+        int borrowedCount = borrowRecordMapper.selectCountByCardId(card.getId());
+        return borrowedCount < student.getMaxBorrowCount();
+    }
+}
