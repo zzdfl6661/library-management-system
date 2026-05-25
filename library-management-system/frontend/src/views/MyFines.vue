@@ -7,7 +7,7 @@
       </template>
       <div class="summary-row">
         <span class="label">未缴罚款：</span>
-        <span class="amount">{{ unpaidFine }}</span>
+        <span class="amount">¥{{ unpaidFine }}</span>
       </div>
     </el-card>
     <el-card class="fine-list">
@@ -16,7 +16,11 @@
       </template>
       <el-table :data="fineRecords" border>
         <el-table-column prop="borrowRecordId" label="借阅记录ID" />
-        <el-table-column prop="amount" label="金额" />
+        <el-table-column prop="amount" label="金额">
+          <template #default="scope">
+            ¥{{ scope.row.amount }}
+          </template>
+        </el-table-column>
         <el-table-column prop="days" label="超期天数" />
         <el-table-column prop="isPaid" label="状态">
           <template #default="scope">
@@ -28,7 +32,7 @@
         <el-table-column prop="createTime" label="创建时间" />
       </el-table>
     </el-card>
-    <el-card class="payment-card">
+    <el-card v-if="role === 'OFFICE'" class="payment-card">
       <template #header>
         <span>缴纳罚款</span>
       </template>
@@ -52,11 +56,10 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import request from '../utils/request'
 
-const unpaidFine = ref('¥20.00')
-const fineRecords = ref([
-  { borrowRecordId: 1, amount: '¥15.00', days: 150, isPaid: 0, createTime: '2024-01-10' },
-  { borrowRecordId: 2, amount: '¥5.00', days: 50, isPaid: 0, createTime: '2024-01-15' }
-])
+const unpaidFine = ref('0.00')
+const fineRecords = ref([])
+
+const role = ref(localStorage.getItem('role') || '')
 
 const paymentForm = reactive({
   studentNo: '',
@@ -74,6 +77,7 @@ const handlePayment = async () => {
       ElMessage.success(response.message)
       paymentForm.studentNo = ''
       paymentForm.amount = ''
+      loadFines()
     } else {
       ElMessage.error(response.message)
     }
@@ -82,15 +86,28 @@ const handlePayment = async () => {
   }
 }
 
-onMounted(async () => {
+const loadFines = async () => {
+  const studentNo = localStorage.getItem('username')
+  if (!studentNo) return
+  
   try {
-    const response = await request.get('/fines/student/2021001')
-    if (response.code === 200) {
-      fineRecords.value = response.data
+    const [totalResponse, recordsResponse] = await Promise.all([
+      request.get(`/fines/student/${studentNo}/total`),
+      request.get(`/fines/student/${studentNo}`)
+    ])
+    if (totalResponse.code === 200) {
+      unpaidFine.value = totalResponse.data || '0.00'
+    }
+    if (recordsResponse.code === 200) {
+      fineRecords.value = recordsResponse.data || []
     }
   } catch (error) {
     console.error('获取罚款记录失败:', error)
   }
+}
+
+onMounted(() => {
+  loadFines()
 })
 </script>
 

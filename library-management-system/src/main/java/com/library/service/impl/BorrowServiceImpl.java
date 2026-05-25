@@ -3,6 +3,8 @@ package com.library.service.impl;
 
 import com.library.dto.request.BorrowRequest;
 import com.library.dto.request.ReturnRequest;
+import com.library.dto.response.BorrowRecordResponse;
+import com.library.entity.Book;
 import com.library.entity.BookCopy;
 import com.library.entity.BorrowRecord;
 import com.library.entity.FineRecord;
@@ -12,6 +14,7 @@ import com.library.enums.BookCopyStatus;
 import com.library.enums.CardStatus;
 import com.library.exception.BusinessException;
 import com.library.mapper.BookCopyMapper;
+import com.library.mapper.BookMapper;
 import com.library.mapper.BorrowRecordMapper;
 import com.library.mapper.FineRecordMapper;
 import com.library.mapper.LibraryCardMapper;
@@ -41,6 +44,9 @@ public class BorrowServiceImpl implements BorrowService {
 
     @Autowired
     private BookCopyMapper bookCopyMapper;
+
+    @Autowired
+    private BookMapper bookMapper;
 
     @Autowired
     private BorrowRecordMapper borrowRecordMapper;
@@ -125,21 +131,43 @@ public class BorrowServiceImpl implements BorrowService {
     }
 
     @Override
-    public List<BorrowRecord> getBorrowRecordsByCardNo(String cardNo) {
+    public List<BorrowRecordResponse> getBorrowRecordsByCardNo(String cardNo) {
         LibraryCard card = libraryCardMapper.selectByCardNo(cardNo);
         if (card == null) {
             throw new BusinessException("借书证不存在");
         }
-        return borrowRecordMapper.selectByCardId(card.getId());
+        return convertToBorrowRecordResponseList(borrowRecordMapper.selectByCardId(card.getId()));
     }
 
     @Override
-    public List<BorrowRecord> getBorrowRecordsByStudentNo(String studentNo) {
+    public List<BorrowRecordResponse> getBorrowRecordsByStudentNo(String studentNo) {
         Student student = studentMapper.selectByStudentNo(studentNo);
         if (student == null) {
             throw new BusinessException("学生不存在");
         }
-        return borrowRecordMapper.selectByStudentId(student.getId());
+        return convertToBorrowRecordResponseList(borrowRecordMapper.selectByStudentId(student.getId()));
+    }
+
+    private List<BorrowRecordResponse> convertToBorrowRecordResponseList(List<BorrowRecord> records) {
+        return records.stream().map(record -> {
+            BorrowRecordResponse response = new BorrowRecordResponse();
+            response.setId(record.getId());
+            response.setCardNo(libraryCardMapper.selectById(record.getCardId()).getCardNo());
+            response.setBorrowDate(record.getBorrowDate());
+            response.setDueDate(record.getDueDate());
+            response.setReturnDate(record.getReturnDate());
+            response.setIsOverdue(record.getIsOverdue());
+            response.setCreateTime(record.getCreateTime());
+            BookCopy copy = bookCopyMapper.selectById(record.getCopyId());
+            if (copy != null) {
+                response.setBarcode(copy.getBarcode());
+                Book book = bookMapper.selectById(copy.getBookId());
+                if (book != null) {
+                    response.setBookTitle(book.getTitle());
+                }
+            }
+            return response;
+        }).collect(java.util.stream.Collectors.toList());
     }
 
     @Override

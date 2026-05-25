@@ -26,7 +26,8 @@
         </el-form-item>
       </el-form>
       <div class="tips">
-        <p>测试账号：office / circulation / acquisition</p>
+        <p>管理员账号：office / circulation / acquisition</p>
+        <p>学生账号：student1 / student2 / student3</p>
         <p>密码统一为：123456</p>
       </div>
     </div>
