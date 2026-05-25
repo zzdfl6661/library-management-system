@@ -26,11 +26,8 @@ public class BookController {
 
     @GetMapping("/search")
     public ApiResponse<List<Book>> searchBooks(
-            @RequestParam(required = false) String title,
-            @RequestParam(required = false) String author,
-            @RequestParam(required = false) String isbn,
-            @RequestParam(required = false) String publisher) {
-        List<Book> books = bookService.searchBooks(title, author, isbn, publisher);
+            @RequestParam(required = false) String keyword) {
+        List<Book> books = bookService.searchBooks(keyword);
         return ApiResponse.success(books);
     }
 
