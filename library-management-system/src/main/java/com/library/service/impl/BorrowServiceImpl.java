@@ -184,4 +184,82 @@ public class BorrowServiceImpl implements BorrowService {
         int borrowedCount = borrowRecordMapper.selectCountByCardId(card.getId());
         return borrowedCount < student.getMaxBorrowCount();
     }
+
+    @Override
+    @Transactional
+    public void borrowBookByStudent(Long bookId, Long studentId) {
+        Student student = studentMapper.selectById(studentId);
+        if (student == null) {
+            throw new BusinessException("学生不存在");
+        }
+        LibraryCard card = libraryCardMapper.selectByStudentId(studentId);
+        if (card == null) {
+            throw new BusinessException("未办理借书证");
+        }
+        if (!CardStatus.NORMAL.name().equals(card.getStatus())) {
+            throw new BusinessException("借书证状态异常");
+        }
+        BigDecimal totalFine = fineRecordMapper.selectUnpaidTotalByStudentId(studentId);
+        if (totalFine.compareTo(new BigDecimal("50")) > 0) {
+            throw new BusinessException("累计罚款超过50元，无法借书");
+        }
+        int borrowedCount = borrowRecordMapper.selectCountByCardId(card.getId());
+        if (borrowedCount >= student.getMaxBorrowCount()) {
+            throw new BusinessException("已达到最大借书数量限制");
+        }
+        List<BookCopy> copies = bookCopyMapper.selectByBookId(bookId);
+        BookCopy availableCopy = copies.stream()
+                .filter(c -> BookCopyStatus.AVAILABLE.name().equals(c.getStatus()))
+                .findFirst()
+                .orElse(null);
+        if (availableCopy == null) {
+            throw new BusinessException("该书暂无可借副本");
+        }
+        LocalDate today = LocalDate.now();
+        LocalDate dueDate = today.plusDays(BORROW_DAYS);
+        BorrowRecord record = new BorrowRecord();
+        record.setCardId(card.getId());
+        record.setCopyId(availableCopy.getId());
+        record.setBorrowDate(today);
+        record.setDueDate(dueDate);
+        record.setIsOverdue(0);
+        record.setCreateTime(LocalDateTime.now());
+        borrowRecordMapper.insert(record);
+        availableCopy.setStatus(BookCopyStatus.BORROWED.name());
+        bookCopyMapper.update(availableCopy);
+    }
+
+    @Override
+    public BorrowRecordResponse checkBorrowStatus(String barcode) {
+        BookCopy bookCopy = bookCopyMapper.selectByBarcode(barcode);
+        if (bookCopy == null) {
+            throw new BusinessException("图书副本不存在");
+        }
+        List<BorrowRecord> records = borrowRecordMapper.selectByCopyId(bookCopy.getId());
+        if (records.isEmpty()) {
+            throw new BusinessException("未找到借阅记录");
+        }
+        BorrowRecord record = records.get(0);
+        return convertToBorrowRecordResponse(record);
+    }
+
+    private BorrowRecordResponse convertToBorrowRecordResponse(BorrowRecord record) {
+        BorrowRecordResponse response = new BorrowRecordResponse();
+        response.setId(record.getId());
+        response.setCardNo(libraryCardMapper.selectById(record.getCardId()).getCardNo());
+        response.setBorrowDate(record.getBorrowDate());
+        response.setDueDate(record.getDueDate());
+        response.setReturnDate(record.getReturnDate());
+        response.setIsOverdue(record.getIsOverdue());
+        response.setCreateTime(record.getCreateTime());
+        BookCopy copy = bookCopyMapper.selectById(record.getCopyId());
+        if (copy != null) {
+            response.setBarcode(copy.getBarcode());
+            Book book = bookMapper.selectById(copy.getBookId());
+            if (book != null) {
+                response.setBookTitle(book.getTitle());
+            }
+        }
+        return response;
+    }
 }
