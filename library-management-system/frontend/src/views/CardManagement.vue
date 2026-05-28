@@ -24,14 +24,14 @@
           </el-table>
         </el-tab-pane>
         <el-tab-pane label="新办借书证" name="create">
-          <el-form ref="createForm" :model="createForm" label-width="120px" class="create-form">
+          <div class="create-card-form">
             <el-form-item label="学号">
-              <el-input v-model="createForm.studentNo" placeholder="请输入学号" />
+              <el-input v-model="createForm.studentNo" placeholder="请输入学号" class="form-input" />
             </el-form-item>
             <el-form-item>
               <el-button type="primary" @click="handleCreate">创建借书证</el-button>
             </el-form-item>
-          </el-form>
+          </div>
         </el-tab-pane>
       </el-tabs>
     </div>
@@ -171,7 +171,49 @@ onMounted(() => {
   color: #909399;
 }
 
-.create-form {
+.create-card-form {
   max-width: 400px;
+  padding: 20px;
+}
+
+.form-item {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #303133;
+}
+
+.form-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 15px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #409eff;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 40px;
+  background: #409eff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.submit-btn:hover {
+  background: #66b1ff;
 }
 </style>

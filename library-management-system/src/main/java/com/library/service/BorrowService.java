@@ -14,6 +14,5 @@ public interface BorrowService {
     List<BorrowRecordResponse> getBorrowRecordsByCardNo(String cardNo);
     List<BorrowRecordResponse> getBorrowRecordsByStudentNo(String studentNo);
     boolean canBorrow(String cardNo);
-    void borrowBookByStudent(Long bookId, Long studentId);
-    BorrowRecordResponse checkBorrowStatus(String barcode);
+    void borrowBookByStudent(Long bookId, String studentNo);
 }
