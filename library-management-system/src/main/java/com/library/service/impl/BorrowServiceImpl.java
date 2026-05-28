@@ -192,7 +192,8 @@ public class BorrowServiceImpl implements BorrowService {
         if (student == null) {
             throw new BusinessException("学生不存在");
         }
-        LibraryCard card = libraryCardMapper.selectByStudentId(studentId);
+        List<LibraryCard> cards = libraryCardMapper.selectByStudentId(studentId);
+        LibraryCard card = cards.isEmpty() ? null : cards.get(0);
         if (card == null) {
             throw new BusinessException("未办理借书证");
         }
