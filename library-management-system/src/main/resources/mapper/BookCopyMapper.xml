@@ -14,6 +14,9 @@
     <select id="selectByStatus" resultType="com.library.entity.BookCopy">
         SELECT * FROM book_copy WHERE status = #{status}
     </select>
+    <select id="selectAvailableByBookId" resultType="com.library.entity.BookCopy">
+        SELECT * FROM book_copy WHERE book_id = #{bookId} AND status = 'AVAILABLE'
+    </select>
     <insert id="insert" parameterType="com.library.entity.BookCopy">
         INSERT INTO book_copy (book_id, barcode, location, status, create_time)
         VALUES (#{bookId}, #{barcode}, #{location}, #{status}, #{createTime})

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/borrow")
@@ -30,6 +31,17 @@ public class BorrowController {
     public ApiResponse<Void> returnBook(@RequestBody ReturnRequest request) {
         borrowService.returnBook(request);
         return ApiResponse.success("还书成功");
+    }
+
+    @PostMapping("/student")
+    public ApiResponse<Void> borrowBookByStudent(@RequestBody Map<String, Object> request) {
+        Long bookId = ((Number) request.get("bookId")).longValue();
+        String studentNo = (String) request.get("studentNo");
+        if (studentNo == null || studentNo.isEmpty()) {
+            throw new IllegalArgumentException("学生学号不能为空");
+        }
+        borrowService.borrowBookByStudent(bookId, studentNo);
+        return ApiResponse.success("借阅成功");
     }
 
     @GetMapping("/card/{cardNo}")

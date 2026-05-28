@@ -184,4 +184,57 @@ public class BorrowServiceImpl implements BorrowService {
         int borrowedCount = borrowRecordMapper.selectCountByCardId(card.getId());
         return borrowedCount < student.getMaxBorrowCount();
     }
+
+    @Override
+    @Transactional
+    public void borrowBookByStudent(Long bookId, String studentNo) {
+        Student student = studentMapper.selectByStudentNo(studentNo);
+        if (student == null) {
+            throw new BusinessException("学生不存在");
+        }
+        
+        List<LibraryCard> cards = libraryCardMapper.selectByStudentId(student.getId());
+        LibraryCard card = null;
+        for (LibraryCard c : cards) {
+            if (CardStatus.NORMAL.name().equals(c.getStatus())) {
+                card = c;
+                break;
+            }
+        }
+        if (card == null) {
+            throw new BusinessException("没有可用的借书证");
+        }
+        
+        BigDecimal totalFine = fineRecordMapper.selectUnpaidTotalByStudentId(student.getId());
+        if (totalFine.compareTo(new BigDecimal("50")) > 0) {
+            throw new BusinessException("累计罚款超过50元，无法借书");
+        }
+        
+        int borrowedCount = borrowRecordMapper.selectCountByCardId(card.getId());
+        if (borrowedCount >= student.getMaxBorrowCount()) {
+            throw new BusinessException("已达到最大借书数量限制");
+        }
+        
+        List<BookCopy> availableCopies = bookCopyMapper.selectAvailableByBookId(bookId);
+        if (availableCopies.isEmpty()) {
+            throw new BusinessException("该书暂无可借副本");
+        }
+        
+        BookCopy bookCopy = availableCopies.get(0);
+        
+        LocalDate today = LocalDate.now();
+        LocalDate dueDate = today.plusDays(BORROW_DAYS);
+        
+        BorrowRecord record = new BorrowRecord();
+        record.setCardId(card.getId());
+        record.setCopyId(bookCopy.getId());
+        record.setBorrowDate(today);
+        record.setDueDate(dueDate);
+        record.setIsOverdue(0);
+        record.setCreateTime(LocalDateTime.now());
+        borrowRecordMapper.insert(record);
+        
+        bookCopy.setStatus(BookCopyStatus.BORROWED.name());
+        bookCopyMapper.update(bookCopy);
+    }
 }

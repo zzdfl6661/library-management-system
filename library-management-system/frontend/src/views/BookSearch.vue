@@ -6,14 +6,17 @@
       <el-button type="primary" @click="handleSearch">搜索</el-button>
     </div>
     <el-table :data="books" border class="book-table">
-      <el-table-column prop="id" label="ID" width="80" />
+      <el-table-column prop="id" label="图书ID" width="100" />
       <el-table-column prop="title" label="书名" />
       <el-table-column prop="author" label="作者" />
       <el-table-column prop="publisher" label="出版社" />
       <el-table-column prop="isbn" label="ISBN" />
-      <el-table-column label="操作" width="120">
+      <el-table-column prop="copyCount" label="副本数" width="100" />
+      <el-table-column prop="availableCount" label="可借数" width="100" />
+      <el-table-column label="操作" width="180">
         <template #default="scope">
           <el-button type="text" @click="viewDetail(scope.row.id)">查看详情</el-button>
+          <el-button v-if="role === 'STUDENT' && scope.row.availableCount > 0" type="primary" size="small" @click="handleBorrow(scope.row)">借阅</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -23,6 +26,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import request from '../utils/request'
 
 const router = useRouter()
@@ -30,6 +34,7 @@ const books = ref([])
 const searchForm = reactive({
   keyword: ''
 })
+const role = ref('')
 
 const handleSearch = async () => {
   try {
@@ -50,7 +55,30 @@ const viewDetail = (id) => {
   router.push(`/books/${id}`)
 }
 
+const handleBorrow = async (book) => {
+  const studentNo = localStorage.getItem('username')
+  if (!studentNo) {
+    ElMessage.error('请先登录')
+    return
+  }
+  try {
+    const response = await request.post('/borrow/student', {
+      bookId: book.id,
+      studentNo: studentNo
+    })
+    if (response.code === 200) {
+      ElMessage.success(response.message)
+      handleSearch()
+    } else {
+      ElMessage.error(response.message)
+    }
+  } catch (error) {
+    ElMessage.error('借阅失败')
+  }
+}
+
 onMounted(() => {
+  role.value = localStorage.getItem('role') || ''
   handleSearch()
 })
 </script>

@@ -3,6 +3,7 @@ package com.library.controller;
 
 import com.library.dto.request.CardCreateRequest;
 import com.library.dto.response.ApiResponse;
+import com.library.dto.response.LibraryCardResponse;
 import com.library.entity.LibraryCard;
 import com.library.service.LibraryCardService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,8 +44,8 @@ public class CardController {
     }
 
     @GetMapping("/{cardNo}")
-    public ApiResponse<LibraryCard> getCardByCardNo(@PathVariable String cardNo) {
-        LibraryCard card = libraryCardService.getByCardNo(cardNo);
+    public ApiResponse<LibraryCardResponse> getCardByCardNo(@PathVariable String cardNo) {
+        LibraryCardResponse card = libraryCardService.getCardInfo(cardNo);
         return ApiResponse.success(card);
     }
 
