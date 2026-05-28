@@ -34,14 +34,17 @@ public class BorrowController {
     }
 
     @PostMapping("/student")
-    public ApiResponse<Void> borrowBookByStudent(@RequestBody Map<String, Object> request) {
-        Long bookId = ((Number) request.get("bookId")).longValue();
-        String studentNo = (String) request.get("studentNo");
-        if (studentNo == null || studentNo.isEmpty()) {
-            throw new IllegalArgumentException("学生学号不能为空");
-        }
-        borrowService.borrowBookByStudent(bookId, studentNo);
+    public ApiResponse<Void> borrowBookByStudent(@RequestBody Map<String, Long> request) {
+        Long bookId = request.get("bookId");
+        Long userId = Long.parseLong(request.get("userId").toString());
+        borrowService.borrowBookByStudent(bookId, userId);
         return ApiResponse.success("借阅成功");
+    }
+
+    @GetMapping("/check/{barcode}")
+    public ApiResponse<BorrowRecordResponse> checkBorrowStatus(@PathVariable String barcode) {
+        BorrowRecordResponse response = borrowService.checkBorrowStatus(barcode);
+        return ApiResponse.success(response);
     }
 
     @GetMapping("/card/{cardNo}")

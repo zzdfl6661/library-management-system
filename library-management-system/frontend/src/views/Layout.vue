@@ -29,11 +29,11 @@
           <i class="el-icon-folder-add"></i>
           <span>新书入库</span>
         </el-menu-item>
-        <el-menu-item index="/myborrows">
+        <el-menu-item v-if="role === 'STUDENT'" index="/myborrows">
           <i class="el-icon-document"></i>
           <span>我的借阅</span>
         </el-menu-item>
-        <el-menu-item index="/myfines">
+        <el-menu-item v-if="role === 'STUDENT'" index="/myfines">
           <i class="el-icon-money"></i>
           <span>我的罚款</span>
         </el-menu-item>
