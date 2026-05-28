@@ -16,7 +16,7 @@
       <el-table-column label="操作" width="180">
         <template #default="scope">
           <el-button type="text" @click="viewDetail(scope.row.id)">查看详情</el-button>
-          <el-button v-if="role === 'STUDENT' && scope.row.availableCount > 0" type="primary" size="small" @click="handleBorrow(scope.row)">借阅</el-button>
+          <el-button v-if="role === 'STUDENT'" type="primary" size="small" @click="handleBorrow(scope.row)">借阅</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -34,7 +34,7 @@ const books = ref([])
 const searchForm = reactive({
   keyword: ''
 })
-const role = ref('')
+const role = ref(localStorage.getItem('role') || '')
 
 const handleSearch = async () => {
   try {
@@ -56,15 +56,19 @@ const viewDetail = (id) => {
 }
 
 const handleBorrow = async (book) => {
-  const studentNo = localStorage.getItem('username')
-  if (!studentNo) {
-    ElMessage.error('请先登录')
+  if (book.availableCount <= 0) {
+    ElMessage.warning('该书暂无可借副本')
+    return
+  }
+  const userId = localStorage.getItem('userId')
+  if (!userId) {
+    ElMessage.error('请重新登录')
     return
   }
   try {
     const response = await request.post('/borrow/student', {
       bookId: book.id,
-      studentNo: studentNo
+      userId: userId
     })
     if (response.code === 200) {
       ElMessage.success(response.message)
@@ -78,7 +82,6 @@ const handleBorrow = async (book) => {
 }
 
 onMounted(() => {
-  role.value = localStorage.getItem('role') || ''
   handleSearch()
 })
 </script>

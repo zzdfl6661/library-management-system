@@ -13,7 +13,6 @@ public interface BookCopyMapper {
     BookCopy selectByBarcode(@Param("barcode") String barcode);
     List<BookCopy> selectByBookId(@Param("bookId") Long bookId);
     List<BookCopy> selectByStatus(@Param("status") String status);
-    List<BookCopy> selectAvailableByBookId(@Param("bookId") Long bookId);
     int insert(BookCopy bookCopy);
     int update(BookCopy bookCopy);
     int deleteById(@Param("id") Long id);

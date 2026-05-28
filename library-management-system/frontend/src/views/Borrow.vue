@@ -15,8 +15,9 @@
         </div>
       </div>
       <div class="form-section">
-        <label class="form-label">图书条码（每行一个）</label>
-        <textarea v-model="borrowForm.barcodes" class="form-textarea" placeholder="请扫描或输入图书条码，每行一个" rows="5"></textarea>
+        <el-form-item label="图书条码（每行一个）">
+          <el-textarea v-model="borrowForm.barcodes" placeholder="请扫描或输入图书条码，每行一个" rows="5" />
+        </el-form-item>
       </div>
       <el-button type="primary" @click="handleBorrow" :disabled="!canSubmit">确认借书</el-button>
     </el-card>
@@ -110,27 +111,5 @@ const handleBorrow = async () => {
 
 .text-danger {
   color: #f56c6c;
-}
-
-.form-label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #303133;
-}
-
-.form-textarea {
-  width: 100%;
-  padding: 10px 15px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  font-size: 14px;
-  resize: vertical;
-  font-family: inherit;
-}
-
-.form-textarea:focus {
-  outline: none;
-  border-color: #409eff;
 }
 </style>

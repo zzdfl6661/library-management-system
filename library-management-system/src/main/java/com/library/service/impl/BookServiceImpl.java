@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,8 +56,23 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public List<Book> searchBooks(String keyword) {
-        return bookMapper.searchByKeyword(keyword);
+    public List<Map<String, Object>> searchBooksWithStats(String keyword) {
+        List<Book> books = bookMapper.searchByKeyword(keyword);
+        return books.stream().map(book -> {
+            Map<String, Object> map = new java.util.HashMap<String, Object>();
+            map.put("id", book.getId());
+            map.put("isbn", book.getIsbn());
+            map.put("title", book.getTitle());
+            map.put("author", book.getAuthor());
+            map.put("publisher", book.getPublisher());
+            List<BookCopy> copies = bookCopyMapper.selectByBookId(book.getId());
+            map.put("copyCount", copies.size());
+            long availableCount = copies.stream()
+                    .filter(c -> BookCopyStatus.AVAILABLE.name().equals(c.getStatus()))
+                    .count();
+            map.put("availableCount", availableCount);
+            return map;
+        }).collect(Collectors.toList());
     }
 
     @Override

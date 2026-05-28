@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/books")
@@ -25,9 +26,9 @@ public class BookController {
     }
 
     @GetMapping("/search")
-    public ApiResponse<List<Book>> searchBooks(
+    public ApiResponse<List<Map<String, Object>>> searchBooks(
             @RequestParam(required = false) String keyword) {
-        List<Book> books = bookService.searchBooks(keyword);
+        List<Map<String, Object>> books = bookService.searchBooksWithStats(keyword);
         return ApiResponse.success(books);
     }
 

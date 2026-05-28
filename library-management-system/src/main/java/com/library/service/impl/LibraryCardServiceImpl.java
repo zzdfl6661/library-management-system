@@ -2,16 +2,15 @@
 package com.library.service.impl;
 
 import com.library.dto.request.CardCreateRequest;
-import com.library.dto.response.LibraryCardResponse;
 import com.library.entity.LibraryCard;
 import com.library.entity.Student;
 import com.library.enums.CardStatus;
 import com.library.exception.BusinessException;
-import com.library.mapper.BorrowRecordMapper;
 import com.library.mapper.LibraryCardMapper;
 import com.library.mapper.StudentMapper;
 import com.library.service.LibraryCardService;
 import com.library.util.BarcodeGenerator;
+import com.library.util.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,9 +27,6 @@ public class LibraryCardServiceImpl implements LibraryCardService {
 
     @Autowired
     private StudentMapper studentMapper;
-
-    @Autowired
-    private BorrowRecordMapper borrowRecordMapper;
 
     @Override
     @Transactional
@@ -110,31 +106,5 @@ public class LibraryCardServiceImpl implements LibraryCardService {
     @Override
     public List<LibraryCard> getAllCards() {
         return libraryCardMapper.selectAll();
-    }
-
-    @Override
-    public LibraryCardResponse getCardInfo(String cardNo) {
-        LibraryCard card = libraryCardMapper.selectByCardNo(cardNo);
-        if (card == null) {
-            return null;
-        }
-        LibraryCardResponse response = new LibraryCardResponse();
-        response.setId(card.getId());
-        response.setCardNo(card.getCardNo());
-        response.setStudentId(card.getStudentId());
-        response.setStatus(card.getStatus());
-        response.setIssueDate(card.getIssueDate());
-        response.setCreateTime(card.getCreateTime());
-        
-        Student student = studentMapper.selectById(card.getStudentId());
-        if (student != null) {
-            response.setStudentNo(student.getStudentNo());
-            int borrowedCount = borrowRecordMapper.selectCountByCardId(card.getId());
-            response.setAvailableCount(student.getMaxBorrowCount() - borrowedCount);
-        } else {
-            response.setAvailableCount(0);
-        }
-        
-        return response;
     }
 }
