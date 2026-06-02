@@ -1,4 +1,3 @@
-
 <template>
   <div class="borrow-page">
     <el-card class="borrow-card">
@@ -15,8 +14,8 @@
         </div>
       </div>
       <div class="form-section">
-        <el-form-item label="图书条码（每行一个）">
-          <el-textarea v-model="borrowForm.barcodes" placeholder="请扫描或输入图书条码，每行一个" rows="5" />
+        <el-form-item label="图书条码">
+          <el-input v-model="borrowForm.barcode" placeholder="请扫描或输入图书条码" />
         </el-form-item>
       </div>
       <el-button type="primary" @click="handleBorrow" :disabled="!canSubmit">确认借书</el-button>
@@ -31,13 +30,13 @@ import request from '../utils/request'
 
 const borrowForm = reactive({
   cardNo: '',
-  barcodes: ''
+  barcode: ''
 })
 
 const cardInfo = ref(null)
 
 const canSubmit = computed(() => {
-  return borrowForm.cardNo && borrowForm.barcodes.trim() && cardInfo.value && cardInfo.value.status === 'NORMAL'
+  return borrowForm.cardNo && borrowForm.barcode && cardInfo.value && cardInfo.value.status === 'NORMAL'
 })
 
 const getCardStatusText = (status) => {
@@ -52,7 +51,7 @@ const getCardStatusText = (status) => {
 const checkCard = async () => {
   if (!borrowForm.cardNo) return
   try {
-    const response = await request.get(`/cards/${borrowForm.cardNo}`)
+    const response = await request.get(`/cards/${borrowForm.cardNo}/info`)
     if (response.code === 200) {
       cardInfo.value = response.data
     }
@@ -64,15 +63,14 @@ const checkCard = async () => {
 
 const handleBorrow = async () => {
   try {
-    const barcodes = borrowForm.barcodes.trim().split('\n').filter(b => b.trim())
     const response = await request.post('/borrow', {
       cardNo: borrowForm.cardNo,
-      barcodes: barcodes
+      barcodes: [borrowForm.barcode]
     })
     if (response.code === 200) {
       ElMessage.success(response.message)
       borrowForm.cardNo = ''
-      borrowForm.barcodes = ''
+      borrowForm.barcode = ''
       cardInfo.value = null
     } else {
       ElMessage.error(response.message)

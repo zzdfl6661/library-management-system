@@ -3,6 +3,7 @@ package com.library.controller;
 
 import com.library.dto.request.CardCreateRequest;
 import com.library.dto.response.ApiResponse;
+import com.library.dto.response.CardResponse;
 import com.library.entity.LibraryCard;
 import com.library.service.LibraryCardService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,9 +49,24 @@ public class CardController {
         return ApiResponse.success(card);
     }
 
+    @GetMapping("/{cardNo}/info")
+    public ApiResponse<CardResponse> getCardInfoWithAvailableCount(@PathVariable String cardNo) {
+        CardResponse response = libraryCardService.getCardInfoWithAvailableCount(cardNo);
+        if (response == null) {
+            throw new com.library.exception.BusinessException("借书证不存在");
+        }
+        return ApiResponse.success(response);
+    }
+
     @GetMapping
     public ApiResponse<List<LibraryCard>> getAllCards() {
         List<LibraryCard> cards = libraryCardService.getAllCards();
+        return ApiResponse.success(cards);
+    }
+
+    @GetMapping("/search")
+    public ApiResponse<List<LibraryCard>> searchCards(@RequestParam(required = false) String cardNo) {
+        List<LibraryCard> cards = libraryCardService.searchCards(cardNo);
         return ApiResponse.success(cards);
     }
 }

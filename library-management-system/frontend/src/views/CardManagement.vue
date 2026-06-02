@@ -4,8 +4,8 @@
     <div class="tabs">
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
         <el-tab-pane label="借书证列表" name="list">
-          <el-input v-model="searchCardNo" placeholder="搜索借书证号" class="search-input" @keyup.enter="loadCards" />
-          <el-table :data="cards" border>
+          <el-input v-model="searchCardNo" placeholder="搜索借书证号" class="search-input" @input="handleSearch" />
+          <el-table :data="filteredCards" border>
             <el-table-column prop="cardNo" label="借书证号" />
             <el-table-column prop="studentId" label="学生ID" />
             <el-table-column prop="status" label="状态">
@@ -26,7 +26,7 @@
         <el-tab-pane label="新办借书证" name="create">
           <el-form ref="createForm" :model="createForm" label-width="120px" class="create-form">
             <el-form-item label="学号">
-              <el-input v-model="createForm.studentNo" placeholder="请输入学号" />
+              <el-input v-model="studentNo" placeholder="请输入学号" />
             </el-form-item>
             <el-form-item>
               <el-button type="primary" @click="handleCreate">创建借书证</el-button>
@@ -39,15 +39,22 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import request from '../utils/request'
 
 const activeTab = ref('list')
 const cards = ref([])
 const searchCardNo = ref('')
-const createForm = reactive({
-  studentNo: ''
+const studentNo = ref('')
+
+const filteredCards = computed(() => {
+  if (!searchCardNo.value || !searchCardNo.value.trim()) {
+    return cards.value
+  }
+  return cards.value.filter(card => 
+    card.cardNo && card.cardNo.includes(searchCardNo.value.trim())
+  )
 })
 
 const getStatusClass = (status) => {
@@ -76,7 +83,11 @@ const loadCards = async () => {
     }
   } catch (error) {
     console.error('获取借书证列表失败:', error)
+    ElMessage.error('获取借书证列表失败')
   }
+}
+
+const handleSearch = () => {
 }
 
 const handleTabChange = () => {
@@ -86,17 +97,22 @@ const handleTabChange = () => {
 }
 
 const handleCreate = async () => {
+  if (!studentNo.value) {
+    ElMessage.warning('请输入学号')
+    return
+  }
   try {
-    const response = await request.post('/cards', createForm)
+    const response = await request.post('/cards', { studentNo: studentNo.value })
     if (response.code === 200) {
       ElMessage.success(response.message)
-      createForm.studentNo = ''
+      studentNo.value = ''
       activeTab.value = 'list'
     } else {
-      ElMessage.error(response.message)
+      ElMessage.error(response.message || '创建失败')
     }
   } catch (error) {
-    ElMessage.error('创建失败')
+    const errorMsg = error.response?.data?.message || '创建失败'
+    ElMessage.error(errorMsg)
   }
 }
 

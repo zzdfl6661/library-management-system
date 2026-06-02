@@ -2,6 +2,7 @@
 package com.library.service.impl;
 
 import com.library.dto.request.CardCreateRequest;
+import com.library.dto.response.CardResponse;
 import com.library.entity.LibraryCard;
 import com.library.entity.Student;
 import com.library.enums.CardStatus;
@@ -27,6 +28,9 @@ public class LibraryCardServiceImpl implements LibraryCardService {
 
     @Autowired
     private StudentMapper studentMapper;
+
+    @Autowired
+    private com.library.mapper.BorrowRecordMapper borrowRecordMapper;
 
     @Override
     @Transactional
@@ -106,5 +110,38 @@ public class LibraryCardServiceImpl implements LibraryCardService {
     @Override
     public List<LibraryCard> getAllCards() {
         return libraryCardMapper.selectAll();
+    }
+
+    @Override
+    public List<LibraryCard> searchCards(String cardNo) {
+        if (cardNo == null || cardNo.trim().isEmpty()) {
+            return libraryCardMapper.selectAll();
+        }
+        return libraryCardMapper.selectByCardNoLike(cardNo);
+    }
+
+    @Override
+    public CardResponse getCardInfoWithAvailableCount(String cardNo) {
+        LibraryCard card = libraryCardMapper.selectByCardNo(cardNo);
+        if (card == null) {
+            return null;
+        }
+        CardResponse response = new CardResponse();
+        response.setId(card.getId());
+        response.setCardNo(card.getCardNo());
+        response.setStudentId(card.getStudentId());
+        response.setStatus(card.getStatus());
+        response.setIssueDate(card.getIssueDate());
+        response.setCreateTime(card.getCreateTime());
+        
+        Student student = studentMapper.selectById(card.getStudentId());
+        if (student != null) {
+            int borrowedCount = borrowRecordMapper.selectCountByCardId(card.getId());
+            response.setAvailableCount(student.getMaxBorrowCount() - borrowedCount);
+        } else {
+            response.setAvailableCount(0);
+        }
+        
+        return response;
     }
 }

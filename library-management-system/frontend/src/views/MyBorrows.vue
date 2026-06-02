@@ -47,7 +47,7 @@ const historyBorrows = computed(() => {
 })
 
 onMounted(async () => {
-  const studentNo = localStorage.getItem('username')
+  const studentNo = localStorage.getItem('studentNo') || localStorage.getItem('username')
   if (!studentNo) return
   
   try {

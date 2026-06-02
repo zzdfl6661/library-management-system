@@ -41,6 +41,14 @@ public class BorrowController {
         return ApiResponse.success("借阅成功");
     }
 
+    @PostMapping("/card")
+    public ApiResponse<Void> borrowBookByCardNo(@RequestBody Map<String, Object> request) {
+        Long bookId = Long.parseLong(request.get("bookId").toString());
+        String cardNo = request.get("cardNo").toString();
+        borrowService.borrowBookByCardNo(bookId, cardNo);
+        return ApiResponse.success("借阅成功");
+    }
+
     @GetMapping("/check/{barcode}")
     public ApiResponse<BorrowRecordResponse> checkBorrowStatus(@PathVariable String barcode) {
         BorrowRecordResponse response = borrowService.checkBorrowStatus(barcode);

@@ -27,7 +27,8 @@
       </el-form>
       <div class="tips">
         <p>管理员账号：office / circulation / acquisition</p>
-        <p>学生账号：student1 / student2 / student3</p>
+        <p>学生账号：student1 / student2 / student3 或使用学号登录</p>
+        <p>学生学号示例：2021001 / 2021002 / 2021003</p>
         <p>密码统一为：123456</p>
       </div>
     </div>
@@ -63,6 +64,11 @@ const handleLogin = async () => {
       localStorage.setItem('username', response.data.username)
       localStorage.setItem('role', response.data.role)
       localStorage.setItem('userId', response.data.id)
+      if (response.data.role === 'STUDENT') {
+        localStorage.setItem('studentNo', response.data.username)
+      } else if (response.data.studentNo) {
+        localStorage.setItem('studentNo', response.data.studentNo)
+      }
       ElMessage.success('登录成功')
       router.push('/')
     } else {

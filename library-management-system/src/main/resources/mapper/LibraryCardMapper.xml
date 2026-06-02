@@ -14,6 +14,9 @@
     <select id="selectAll" resultType="com.library.entity.LibraryCard">
         SELECT * FROM library_card
     </select>
+    <select id="selectByCardNoLike" resultType="com.library.entity.LibraryCard">
+        SELECT * FROM library_card WHERE card_no LIKE CONCAT('%', #{cardNo}, '%')
+    </select>
     <insert id="insert" parameterType="com.library.entity.LibraryCard">
         INSERT INTO library_card (card_no, student_id, status, issue_date, create_time)
         VALUES (#{cardNo}, #{studentId}, #{status}, #{issueDate}, #{createTime})
