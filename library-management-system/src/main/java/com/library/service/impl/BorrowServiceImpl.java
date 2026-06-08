@@ -166,6 +166,16 @@ public class BorrowServiceImpl implements BorrowService {
                     response.setBookTitle(book.getTitle());
                 }
             }
+            FineRecord fine = fineRecordMapper.selectByBorrowRecordId(record.getId());
+            if (fine != null) {
+                response.setFineAmount(fine.getAmount());
+                response.setFinePaid(fine.getIsPaid());
+                response.setHasFine(1);
+            } else {
+                response.setFineAmount(BigDecimal.ZERO);
+                response.setFinePaid(0);
+                response.setHasFine(0);
+            }
             return response;
         }).collect(java.util.stream.Collectors.toList());
     }

@@ -3,6 +3,7 @@ package com.library.dto.response;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -18,4 +19,7 @@ public class BorrowRecordResponse {
     private LocalDate returnDate;
     private Integer isOverdue;
     private LocalDateTime createTime;
+    private BigDecimal fineAmount;
+    private Integer finePaid;
+    private Integer hasFine;
 }

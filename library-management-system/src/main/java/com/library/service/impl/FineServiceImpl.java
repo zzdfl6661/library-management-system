@@ -40,6 +40,7 @@ public class FineServiceImpl implements FineService {
     private static final BigDecimal FINE_PER_DAY = new BigDecimal("0.10");
 
     @Override
+    @Transactional
     public BigDecimal getUnpaidFineByStudentNo(String studentNo) {
         Student student = studentMapper.selectByStudentNo(studentNo);
         if (student == null) {
@@ -50,6 +51,7 @@ public class FineServiceImpl implements FineService {
     }
 
     @Override
+    @Transactional
     public List<FineRecord> getFineRecordsByStudentNo(String studentNo) {
         Student student = studentMapper.selectByStudentNo(studentNo);
         if (student == null) {

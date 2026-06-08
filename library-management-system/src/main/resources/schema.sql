@@ -107,12 +107,25 @@ CREATE INDEX idx_borrow_card_id ON borrow_record(card_id);
 CREATE INDEX idx_borrow_return_date ON borrow_record(return_date);
 
 INSERT INTO sys_user (username, password, role, create_time) VALUES
-('office', '123456', 'OFFICE', NOW()),
-('circulation', '123456', 'CIRCULATION', NOW()),
-('acquisition', '123456', 'ACQUISITION', NOW()),
-('student1', '123456', 'STUDENT', NOW()),
-('student2', '123456', 'STUDENT', NOW()),
-('student3', '123456', 'STUDENT', NOW());
+('office', '123456', 'OFFICE', '2026-05-11 08:52:34'),
+('circulation', '123456', 'CIRCULATION', '2026-05-11 08:52:34'),
+('acquisition', '123456', 'ACQUISITION', '2026-05-11 08:52:34'),
+('2021001', '123456', 'STUDENT', '2026-05-25 09:48:11'),
+('2021002', '123456', 'STUDENT', '2026-05-25 09:48:11'),
+('2021003', '123456', 'STUDENT', '2026-05-25 09:48:11'),
+('2021004', '123456', 'STUDENT', '2026-06-02 15:29:46'),
+('2020001', '123456', 'STUDENT', '2026-06-02 15:29:46'),
+('2020002', '123456', 'STUDENT', '2026-06-02 15:29:46'),
+('2020002', '123456', 'STUDENT', '2026-06-02 15:29:46'),
+('2021005', '123456', 'STUDENT', '2026-06-02 15:29:46'),
+('2021006', '123456', 'STUDENT', '2026-06-02 15:29:46'),
+('2021007', '123456', 'STUDENT', '2026-06-02 15:29:46'),
+('2021008', '123456', 'STUDENT', '2026-06-02 15:29:46'),
+('2021009', '123456', 'STUDENT', '2026-06-02 15:29:46'),
+('2021010', '123456', 'STUDENT', '2026-06-02 15:29:46'),
+('2020003', '123456', 'STUDENT', '2026-06-02 15:29:46'),
+('2021011', '123456', 'STUDENT', '2026-06-02 15:29:46'),
+('2021012', '123456', 'STUDENT', '2026-06-02 15:29:46');
 
 INSERT INTO student (student_no, name, type, max_borrow_count, create_time) VALUES
 ('2021001', 'Zhang San', 'UNDERGRADUATE', 5, NOW()),
@@ -182,6 +195,14 @@ INSERT INTO borrow_record (card_id, copy_id, borrow_date, due_date, return_date,
 
 INSERT INTO fine_record (student_id, borrow_record_id, amount, days, is_paid, create_time) VALUES
 (1, 1, 15.00, 150, 0, '2024-02-11 00:00:00'),
-(1, 2, 5.00, 50, 0, '2024-02-16 00:00:00');
+(1, 2, 5.00, 50, 0, '2024-02-16 00:00:00'),
+(3, 4, 82.90, 829, 0, '2026-06-08 09:46:35'),
+(3, 4, 82.90, 829, 0, '2026-06-08 09:46:35'),
+(2, 3, 83.90, 839, 1, '2026-06-08 10:40:34'),
+(2, 3, 83.90, 839, 0, '2026-06-08 10:40:34'),
+(2, 3, 20.00, 200, 0, '2024-02-21 00:00:00'),
+(2, 3, 20.00, 200, 0, '2024-02-21 00:00:00'),
+(3, 4, 18.00, 180, 0, '2024-03-02 00:00:00'),
+(3, 4, 18.00, 180, 0, '2024-03-02 00:00:00');
 
 SET FOREIGN_KEY_CHECKS = 1;
