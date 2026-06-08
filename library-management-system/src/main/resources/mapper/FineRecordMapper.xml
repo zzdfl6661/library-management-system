@@ -26,6 +26,9 @@
         UPDATE fine_record SET is_paid = 1 WHERE student_id = #{studentId} AND is_paid = 0
         ORDER BY create_time LIMIT 1
     </update>
+    <select id="selectByBorrowRecordId" resultType="com.library.entity.FineRecord">
+        SELECT * FROM fine_record WHERE borrow_record_id = #{borrowRecordId}
+    </select>
     <delete id="deleteById">
         DELETE FROM fine_record WHERE id = #{id}
     </delete>

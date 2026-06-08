@@ -17,5 +17,6 @@ public interface FineRecordMapper {
     int insert(FineRecord record);
     int update(FineRecord record);
     int updatePaidByStudentId(@Param("studentId") Long studentId, @Param("amount") BigDecimal amount);
+    FineRecord selectByBorrowRecordId(@Param("borrowRecordId") Long borrowRecordId);
     int deleteById(@Param("id") Long id);
 }

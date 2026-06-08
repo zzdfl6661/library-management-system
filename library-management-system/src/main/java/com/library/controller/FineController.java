@@ -43,4 +43,10 @@ public class FineController {
         List<PaymentRecord> records = fineService.getPaymentRecordsByStudentNo(studentNo);
         return ApiResponse.success(records);
     }
+
+    @PostMapping("/{fineId}/repay")
+    public ApiResponse<Void> repayFine(@PathVariable Long fineId) {
+        fineService.repayFine(fineId);
+        return ApiResponse.success("还款成功");
+    }
 }

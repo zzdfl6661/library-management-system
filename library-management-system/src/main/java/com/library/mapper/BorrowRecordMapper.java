@@ -22,6 +22,7 @@ public interface BorrowRecordMapper {
     int selectCountByStudentIdAndMonth(@Param("studentId") Long studentId, 
                                        @Param("startDate") LocalDate startDate, 
                                        @Param("endDate") LocalDate endDate);
+    List<BorrowRecord> selectUnreturnedByStudentId(@Param("studentId") Long studentId);
     int insert(BorrowRecord record);
     int update(BorrowRecord record);
     int deleteById(@Param("id") Long id);

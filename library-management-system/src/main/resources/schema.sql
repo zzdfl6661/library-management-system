@@ -180,8 +180,8 @@ INSERT INTO borrow_record (card_id, copy_id, borrow_date, due_date, return_date,
 (3, 3, '2024-02-01', '2024-03-01', NULL, 0),
 (4, 7, '2024-02-05', '2024-03-05', NULL, 0);
 
-INSERT INTO fine_record (student_id, borrow_record_id, amount, days, is_paid) VALUES
-(1, 1, 15.00, 150, 0),
-(1, 2, 5.00, 50, 0);
+INSERT INTO fine_record (student_id, borrow_record_id, amount, days, is_paid, create_time) VALUES
+(1, 1, 15.00, 150, 0, '2024-02-11 00:00:00'),
+(1, 2, 5.00, 50, 0, '2024-02-16 00:00:00');
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -11,8 +11,8 @@
             <el-table-column prop="dueDate" label="应还日期" />
             <el-table-column label="状态">
               <template #default="scope">
-                <span :class="scope.row.isOverdue ? 'text-danger' : 'text-warning'">
-                  {{ scope.row.isOverdue ? '已超期' : '借阅中' }}
+                <span :class="isOverdue(scope.row) ? 'text-danger' : 'text-warning'">
+                  {{ isOverdue(scope.row) ? '已超期' : '借阅中' }}
                 </span>
               </template>
             </el-table-column>
@@ -37,6 +37,14 @@ import request from '../utils/request'
 
 const activeTab = ref('current')
 const allBorrows = ref([])
+
+const isOverdue = (row) => {
+  if (!row.dueDate) return false
+  const dueDate = new Date(row.dueDate)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return dueDate < today
+}
 
 const currentBorrows = computed(() => {
   return allBorrows.value.filter(b => !b.returnDate)

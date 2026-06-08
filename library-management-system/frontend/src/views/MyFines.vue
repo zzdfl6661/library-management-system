@@ -30,6 +30,18 @@
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" />
+        <el-table-column label="操作" width="120">
+          <template #default="scope">
+            <el-button
+              v-if="role !== 'OFFICE' && !scope.row.isPaid"
+              type="primary"
+              size="small"
+              @click="handleRepay(scope.row)"
+            >
+              还款
+            </el-button>
+          </template>
+        </el-table-column>
       </el-table>
     </el-card>
     <el-card v-if="role === 'OFFICE'" class="payment-card">
@@ -86,8 +98,29 @@ const handlePayment = async () => {
   }
 }
 
+const handleRepay = async (row) => {
+  try {
+    console.log('Repaying fine:', row)
+    const response = await request.post(`/fines/${row.id}/repay`)
+    console.log('Response:', response)
+    if (response.code === 200) {
+      ElMessage.success(response.message)
+      loadFines()
+    } else {
+      ElMessage.error(response.message || '还款失败')
+    }
+  } catch (error) {
+    console.error('Repay error:', error)
+    if (error.response) {
+      ElMessage.error('还款失败: ' + error.response.data?.message || error.response.statusText)
+    } else {
+      ElMessage.error('还款失败: ' + error.message)
+    }
+  }
+}
+
 const loadFines = async () => {
-  const studentNo = localStorage.getItem('username')
+  const studentNo = localStorage.getItem('studentNo') || localStorage.getItem('username')
   if (!studentNo) return
   
   try {

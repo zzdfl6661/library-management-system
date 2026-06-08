@@ -13,4 +13,6 @@ public interface FineService {
     List<FineRecord> getFineRecordsByStudentNo(String studentNo);
     void payFine(PaymentRequest request);
     List<PaymentRecord> getPaymentRecordsByStudentNo(String studentNo);
+    void repayFine(Long fineId);
+    void generateFinesForOverdueBorrows(String studentNo);
 }

@@ -34,6 +34,11 @@
         WHERE lc.student_id = #{studentId} 
         AND br.borrow_date &gt;= #{startDate} AND br.borrow_date &lt;= #{endDate}
     </select>
+    <select id="selectUnreturnedByStudentId" resultType="com.library.entity.BorrowRecord">
+        SELECT br.* FROM borrow_record br 
+        JOIN library_card lc ON br.card_id = lc.id 
+        WHERE lc.student_id = #{studentId} AND br.return_date IS NULL
+    </select>
     <insert id="insert" parameterType="com.library.entity.BorrowRecord">
         INSERT INTO borrow_record (card_id, copy_id, borrow_date, due_date, is_overdue, create_time)
         VALUES (#{cardId}, #{copyId}, #{borrowDate}, #{dueDate}, #{isOverdue}, #{createTime})
