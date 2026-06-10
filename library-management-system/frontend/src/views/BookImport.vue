@@ -30,32 +30,30 @@
         v-loading="loading"
         class="book-table"
       >
-        <el-table-column prop="isbn" label="ISBN" width="150" />
+        <el-table-column prop="ISBN" label="ISBN" width="150" />
         <el-table-column prop="bname" label="书名" min-width="150" />
         <el-table-column prop="author" label="作者" width="100" />
         <el-table-column prop="publisher" label="出版社" width="120" />
-        <el-table-column prop="publishDate" label="出版日期" width="100" />
-        <el-table-column label="副本数" width="80" align="center">
+        <el-table-column prop="pubDate" label="出版日期" width="100" />
+        <el-table-column label="状态" width="80" align="center">
           <template #default="scope">
-            <el-button type="text" @click="openCopiesDialog(scope.row)">
-              {{ scope.row.copyCount || 0 }}
-            </el-button>
+            {{ scope.row.bookStatus === 'ONSHELF' ? '上架' : '下架' }}
           </template>
         </el-table-column>
         <el-table-column label="操作" width="220" fixed="right">
           <template #default="scope">
-            <el-button 
-              size="small" 
+            <el-button
+              size="small"
               @click="handleOffshelf(scope.row)"
-              :disabled="scope.row.status === 'OFFSHELF'"
+              :disabled="scope.row.bookStatus === 'OFFSHELF'"
             >
               下架
             </el-button>
-            <el-button 
-              size="small" 
+            <el-button
+              size="small"
               type="warning"
               @click="handleOnshelf(scope.row)"
-              :disabled="scope.row.status !== 'OFFSHELF'"
+              :disabled="scope.row.bookStatus !== 'OFFSHELF'"
             >
               上架
             </el-button>

@@ -13,7 +13,7 @@ import java.util.List;
 public interface BookMapper {
     Book selectByIsbn(@Param("ISBN") String ISBN);
 
-    Book selectById(@Param("id") Long id);
+    Book selectById(@Param("id") Integer id);
 
     List<Book> selectByKeyword(@Param("keyword") String keyword);
 

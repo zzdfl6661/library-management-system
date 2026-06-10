@@ -57,7 +57,7 @@ public class BookCopyServiceImpl implements BookCopyService {
             throw new BusinessException("图书副本已存在");
         }
         BookCopy copy = new BookCopy();
-        copy.setIsbn(isbn);
+        copy.setISBN(isbn);
         copy.setBarCode(barCode);
         copy.setPlace(place);
         copy.setStatus(BookCopyStatus.AVAILABLE);

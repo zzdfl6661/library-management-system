@@ -17,7 +17,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/borrow")
-@CrossOrigin(origins = "*")
 public class BorrowController {
 
     @Autowired

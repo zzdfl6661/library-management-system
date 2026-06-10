@@ -152,8 +152,8 @@ const checkCard = async () => {
       const data = response.data
       if (data.canBorrow) {
         readerInfo.value = {
-          name: data.name || '读者',
-          sno: data.sno || cardNo.value
+          name: data.card?.sname || '读者',
+          sno: data.card?.sno || cardNo.value
         }
         availableCount.value = data.availableCount || 5
         currentStep.value = 1
@@ -189,13 +189,17 @@ const addBook = async () => {
   }
 
   try {
-    const response = await request.get(`/borrow/check/${barCode.value}`)
+    const response = await request.get(`/book/copy/${barCode.value}`)
     if (response.code === 200) {
       const data = response.data
+      if (data.status === 'BORROWED' || data.status === 0 || data.status === 'CANCELLED' || data.status === 2) {
+        ElMessage.error('该图书不可借')
+        return
+      }
       borrowList.value.push({
-        barCode: barCode.value,
+        barCode: data.barCode,
         isbn: data.isbn || '',
-        bname: data.bname || data.title || '未知书名',
+        bname: data.bname || '未知书名',
         author: data.author || '未知作者',
         publisher: data.publisher || '',
         place: data.place || ''

@@ -37,7 +37,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException("用户名或密码错误");
         }
 
-        String role = admin.getAdminType() != null ? admin.getAdminType().name() : "ADMIN";
+        String role = getRoleByAdminType(admin.getAdminType());
         String token = jwtUtil.generateToken(Long.valueOf(admin.getId()), username, role);
 
         LoginResponse response = new LoginResponse();
@@ -47,6 +47,18 @@ public class AuthServiceImpl implements AuthService {
         response.setToken(token);
 
         return response;
+    }
+
+    private String getRoleByAdminType(Integer adminType) {
+        if (adminType == null) {
+            return "ADMIN";
+        }
+        return switch (adminType) {
+            case 0 -> "OFFICE";
+            case 1 -> "ACQUISITION";
+            case 2 -> "CIRCULATION";
+            default -> "ADMIN";
+        };
     }
 
     @Override

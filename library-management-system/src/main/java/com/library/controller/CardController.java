@@ -16,7 +16,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/card")
-@CrossOrigin(origins = "*")
 public class CardController {
 
     @Autowired
@@ -24,6 +23,18 @@ public class CardController {
 
     @Autowired
     private CardRecordService cardRecordService;
+
+    @GetMapping("/list")
+    public ApiResponse<List<LibraryCard>> getCardList(
+            @RequestParam(required = false) String keyword) {
+        List<LibraryCard> cards;
+        if (keyword != null && !keyword.isEmpty()) {
+            cards = libraryCardService.searchCards(keyword);
+        } else {
+            cards = libraryCardService.getAllCards();
+        }
+        return ApiResponse.success(cards);
+    }
 
     @GetMapping("/student/{sno}")
     public ApiResponse<Map<String, Object>> getStudentInfo(@PathVariable String sno) {

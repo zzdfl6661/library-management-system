@@ -7,16 +7,16 @@
         </div>
       </template>
       <el-descriptions :column="2" border>
-        <el-descriptions-item label="姓名">{{ student?.name || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="姓名">{{ student?.username || '-' }}</el-descriptions-item>
         <el-descriptions-item label="学号">{{ student?.sno || '-' }}</el-descriptions-item>
         <el-descriptions-item label="性别">{{ student?.gender || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="班级">{{ student?.classNo || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="班级">{{ student?.className || '-' }}</el-descriptions-item>
         <el-descriptions-item label="专业">{{ student?.major || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="籍贯">{{ student?.nativePlace || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="籍贯">{{ student?.originPlace || '-' }}</el-descriptions-item>
         <el-descriptions-item label="身份证号">{{ student?.idCard || '-' }}</el-descriptions-item>
         <el-descriptions-item label="是否已办理">
-          <el-tag :type="cardStatus === 'NORMAL' ? 'success' : 'info'" size="small">
-            {{ cardStatus === 'NORMAL' ? '已办理' : '未办理' }}
+          <el-tag :type="cardStatus === '正常' ? 'success' : 'info'" size="small">
+            {{ cardStatus === '正常' ? '已办理' : '未办理' }}
           </el-tag>
         </el-descriptions-item>
         <el-descriptions-item v-if="showCardNo" label="借书证号">
@@ -62,7 +62,7 @@ const cardStatus = ref('')
 
 watch(() => props.card, (newCard) => {
   if (newCard) {
-    cardStatus.value = newCard.status || 'NORMAL'
+    cardStatus.value = newCard.cardStatus || '正常'
   } else {
     cardStatus.value = ''
   }
@@ -74,18 +74,18 @@ watch(localCardNo, (val) => {
 
 const getStatusType = (status) => {
   const types = {
-    'NORMAL': 'success',
-    'LOST': 'warning',
-    'CANCELLED': 'info'
+    '正常': 'success',
+    '挂失': 'warning',
+    '注销': 'info'
   }
   return types[status] || 'info'
 }
 
 const getStatusText = (status) => {
   const texts = {
-    'NORMAL': '正常',
-    'LOST': '挂失',
-    'CANCELLED': '已注销'
+    '正常': '正常',
+    '挂失': '挂失',
+    '注销': '已注销'
   }
   return texts[status] || status
 }

@@ -14,11 +14,11 @@
             <el-table-column type="index" label="序号" width="60" />
             <el-table-column prop="bookTitle" label="书名" min-width="150" />
             <el-table-column prop="author" label="作者" min-width="100" />
-            <el-table-column prop="borrowDate" label="借书日期" width="110" />
-            <el-table-column prop="dueDate" label="应还日期" width="110" />
-            <el-table-column prop="actualReturnDate" label="实际还书日期" width="120">
+            <el-table-column prop="borDate" label="借书日期" width="110" />
+            <el-table-column prop="retDate" label="应还日期" width="110" />
+            <el-table-column prop="realRetDate" label="实际还书日期" width="120">
               <template #default="scope">
-                {{ scope.row.actualReturnDate || '-' }}
+                {{ scope.row.realRetDate || '-' }}
               </template>
             </el-table-column>
             <el-table-column label="还书状态" width="100">
@@ -30,17 +30,17 @@
             </el-table-column>
             <el-table-column label="罚款金额" width="100">
               <template #default="scope">
-                <span v-if="scope.row.fineAmount > 0" :class="scope.row.finePaid ? 'text-success' : 'text-danger'">
-                  ¥{{ scope.row.fineAmount }}
+                <span v-if="scope.row.fineMoney > 0" :class="scope.row.fineStatus === '已缴' ? 'text-success' : 'text-danger'">
+                  ¥{{ scope.row.fineMoney }}
                 </span>
                 <span v-else class="text-gray">-</span>
               </template>
             </el-table-column>
             <el-table-column label="罚款状态" width="100">
               <template #default="scope">
-                <span v-if="scope.row.fineAmount > 0">
-                  <span :class="scope.row.finePaid ? 'text-success' : 'text-danger'">
-                    {{ scope.row.finePaid ? '已缴纳' : '未缴纳' }}
+                <span v-if="scope.row.fineMoney > 0">
+                  <span :class="scope.row.fineStatus === '已缴' ? 'text-success' : 'text-danger'">
+                    {{ scope.row.fineStatus === '已缴' ? '已缴纳' : '未缴纳' }}
                   </span>
                 </span>
                 <span v-else class="text-gray">无罚款</span>
@@ -53,9 +53,9 @@
             <el-table-column type="index" label="序号" width="60" />
             <el-table-column prop="bookTitle" label="书名" min-width="150" />
             <el-table-column prop="author" label="作者" min-width="100" />
-            <el-table-column prop="borrowDate" label="借书日期" width="110" />
-            <el-table-column prop="dueDate" label="应还日期" width="110" />
-            <el-table-column prop="actualReturnDate" label="实际还书日期" width="120" />
+            <el-table-column prop="borDate" label="借书日期" width="110" />
+            <el-table-column prop="retDate" label="应还日期" width="110" />
+            <el-table-column prop="realRetDate" label="实际还书日期" width="120" />
             <el-table-column label="还书状态" width="100">
               <template #default="scope">
                 <span :class="getStatusClass(scope.row)">
@@ -65,17 +65,17 @@
             </el-table-column>
             <el-table-column label="罚款金额" width="100">
               <template #default="scope">
-                <span v-if="scope.row.fineAmount > 0" :class="scope.row.finePaid ? 'text-success' : 'text-danger'">
-                  ¥{{ scope.row.fineAmount }}
+                <span v-if="scope.row.fineMoney > 0" :class="scope.row.fineStatus === '已缴' ? 'text-success' : 'text-danger'">
+                  ¥{{ scope.row.fineMoney }}
                 </span>
                 <span v-else class="text-gray">-</span>
               </template>
             </el-table-column>
             <el-table-column label="罚款状态" width="100">
               <template #default="scope">
-                <span v-if="scope.row.fineAmount > 0">
-                  <span :class="scope.row.finePaid ? 'text-success' : 'text-danger'">
-                    {{ scope.row.finePaid ? '已缴纳' : '未缴纳' }}
+                <span v-if="scope.row.fineMoney > 0">
+                  <span :class="scope.row.fineStatus === '已缴' ? 'text-success' : 'text-danger'">
+                    {{ scope.row.fineStatus === '已缴' ? '已缴纳' : '未缴纳' }}
                   </span>
                 </span>
                 <span v-else class="text-gray">无罚款</span>
@@ -113,21 +113,21 @@ const pageSize = ref(10)
 const totalHistory = ref(0)
 
 const isOverdue = (row) => {
-  if (!row.dueDate || row.actualReturnDate) return false
-  const dueDate = new Date(row.dueDate)
+  if (!row.retDate || row.realRetDate) return false
+  const dueDate = new Date(row.retDate)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   return dueDate < today
 }
 
 const getStatusText = (row) => {
-  if (row.actualReturnDate) return '已归还'
+  if (row.realRetDate) return '已归还'
   if (isOverdue(row)) return '已超期'
   return '借阅中'
 }
 
 const getStatusClass = (row) => {
-  if (row.actualReturnDate) return 'text-success'
+  if (row.realRetDate) return 'text-success'
   if (isOverdue(row)) return 'text-danger'
   return 'text-warning'
 }

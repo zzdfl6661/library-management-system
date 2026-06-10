@@ -10,11 +10,12 @@ import com.library.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/book")
-@CrossOrigin(origins = "*")
 public class BookController {
 
     @Autowired
@@ -80,6 +81,24 @@ public class BookController {
     public ApiResponse<List<BookCopy>> getCopies(@PathVariable String isbn) {
         List<BookCopy> copies = bookCopyService.getCopiesByIsbn(isbn);
         return ApiResponse.success(copies);
+    }
+
+    @GetMapping("/copy/{barCode}")
+    public ApiResponse<Map<String, Object>> getCopyByBarcode(@PathVariable String barCode) {
+        BookCopy copy = bookCopyService.getCopyByBarCode(barCode);
+        if (copy == null) {
+            return ApiResponse.error(404, "副本不存在");
+        }
+        Book book = bookService.getBookByIsbn(copy.getISBN());
+        Map<String, Object> result = new HashMap<>();
+        result.put("barCode", copy.getBarCode());
+        result.put("isbn", copy.getISBN());
+        result.put("place", copy.getPlace());
+        result.put("status", copy.getStatus());
+        result.put("bname", book != null ? book.getBname() : "");
+        result.put("author", book != null ? book.getAuthor() : "");
+        result.put("publisher", book != null ? book.getPublisher() : "");
+        return ApiResponse.success(result);
     }
 
     @PostMapping("/{isbn}/copies")

@@ -19,18 +19,18 @@
         <el-table-column type="selection" width="50" />
         <el-table-column prop="bookTitle" label="书名" min-width="150" />
         <el-table-column prop="author" label="作者" min-width="100" />
-        <el-table-column prop="borrowDate" label="借书日期" width="110" />
-        <el-table-column prop="dueDate" label="应还日期" width="110" />
-        <el-table-column prop="actualReturnDate" label="实还日期" width="110" />
+        <el-table-column prop="borDate" label="借书日期" width="110" />
+        <el-table-column prop="retDate" label="应还日期" width="110" />
+        <el-table-column prop="realRetDate" label="实还日期" width="110" />
         <el-table-column label="罚款金额" width="100">
           <template #default="scope">
-            <span class="text-danger">¥{{ scope.row.fineAmount }}</span>
+            <span class="text-danger">¥{{ scope.row.fineMoney }}</span>
           </template>
         </el-table-column>
         <el-table-column label="状态" width="100">
           <template #default="scope">
-            <span :class="scope.row.isPaid ? 'text-success' : 'text-danger'">
-              {{ scope.row.isPaid ? '已缴纳' : '未缴纳' }}
+            <span :class="scope.row.fineStatus === '已缴' ? 'text-success' : 'text-danger'">
+              {{ scope.row.fineStatus === '已缴' ? '已缴纳' : '未缴纳' }}
             </span>
           </template>
         </el-table-column>
@@ -64,7 +64,7 @@ const selectedFines = ref([])
 const loading = ref(false)
 
 const selectedAmount = computed(() => {
-  return selectedFines.value.reduce((sum, fine) => sum + (fine.fineAmount || 0), 0).toFixed(2)
+  return selectedFines.value.reduce((sum, fine) => sum + (fine.fineMoney || 0), 0).toFixed(2)
 })
 
 const loadUnpaidFines = async () => {
@@ -165,13 +165,13 @@ const handlePayAll = async () => {
 const handleExport = () => {
   const data = unpaidFines.value.map((fine, index) => ({
     序号: index + 1,
-    书名: fine.bookTitle,
-    作者: fine.author,
-    借书日期: fine.borrowDate,
-    应还日期: fine.dueDate,
-    实还日期: fine.actualReturnDate || '-',
-    罚款金额: fine.fineAmount,
-    状态: fine.isPaid ? '已缴纳' : '未缴纳'
+    书名: fine.bookTitle || fine.bname || '',
+    作者: fine.author || '',
+    借书日期: fine.borDate,
+    应还日期: fine.retDate,
+    实还日期: fine.realRetDate || '-',
+    罚款金额: fine.fineMoney,
+    状态: fine.fineStatus === '已缴' ? '已缴纳' : '未缴纳'
   }))
 
   const headers = ['序号', '书名', '作者', '借书日期', '应还日期', '实还日期', '罚款金额', '状态']

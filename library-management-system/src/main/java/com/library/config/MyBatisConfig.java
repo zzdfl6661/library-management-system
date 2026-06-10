@@ -1,6 +1,8 @@
 package com.library.config;
 
-import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
+import com.baomidou.mybatisplus.annotation.DbType;
+import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -8,7 +10,9 @@ import org.springframework.context.annotation.Configuration;
 public class MyBatisConfig {
 
     @Bean
-    public ConfigurationCustomizer configurationCustomizer() {
-        return configuration -> configuration.setMapUnderscoreToCamelCase(true);
+    public MybatisPlusInterceptor mybatisPlusInterceptor() {
+        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+        interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
+        return interceptor;
     }
 }

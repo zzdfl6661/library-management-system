@@ -111,11 +111,7 @@ const handleLogout = () => {
   localStorage.removeItem('role')
   localStorage.removeItem('userId')
   ElMessage.success('退出成功')
-  if (role.value === 'STUDENT') {
-    router.push('/reader-login')
-  } else {
-    router.push('/login')
-  }
+  router.push('/login')
 }
 </script>
 

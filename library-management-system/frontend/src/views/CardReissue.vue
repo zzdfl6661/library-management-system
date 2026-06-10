@@ -79,22 +79,22 @@ const rules = {
 }
 
 const canReissue = computed(() => {
-  return cardData.value && cardData.value.status === 'LOST'
+  return cardData.value && cardData.value.cardStatus === '挂失'
 })
 
 const resultIcon = computed(() => {
   if (!studentData.value) return 'info'
   if (!cardData.value) return 'warning'
-  if (cardData.value.status === 'NORMAL') return 'success'
-  if (cardData.value.status === 'CANCELLED') return 'info'
+  if (cardData.value.cardStatus === '正常') return 'success'
+  if (cardData.value.cardStatus === '注销') return 'info'
   return 'warning'
 })
 
 const resultTitle = computed(() => {
   if (!studentData.value) return ''
   if (!cardData.value) return '该学生未办理借书证'
-  if (cardData.value.status === 'NORMAL') return '该借书证状态正常'
-  if (cardData.value.status === 'CANCELLED') return '该借书证已注销'
+  if (cardData.value.cardStatus === '正常') return '该借书证状态正常'
+  if (cardData.value.cardStatus === '注销') return '该借书证已注销'
   return ''
 })
 

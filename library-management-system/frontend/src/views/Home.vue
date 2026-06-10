@@ -24,9 +24,8 @@
                 <i class="el-icon-book"></i>
               </div>
               <div class="book-info">
-                <p class="book-title">{{ book.title }}</p>
-                <p class="book-author">{{ book.author }}</p>
-                <p class="book-count">借阅 {{ book.borrowCount }} 次</p>
+                <p class="book-title">{{ book.name }}</p>
+                <p class="book-count">借阅 {{ book.count }} 次</p>
               </div>
             </div>
           </div>
@@ -47,7 +46,7 @@
               <div class="reader-rank" :class="getRankClass(index)">{{ index + 1 }}</div>
               <div class="reader-info">
                 <p class="reader-name">{{ reader.name || reader.username }}</p>
-                <p class="reader-count">借阅 {{ reader.borrowCount }} 次</p>
+                <p class="reader-count">借阅 {{ reader.count }} 次</p>
               </div>
             </div>
           </div>
@@ -69,9 +68,9 @@
                 <i class="el-icon-book"></i>
               </div>
               <div class="book-info">
-                <p class="book-title">{{ book.title }}</p>
+                <p class="book-title">{{ book.bname }}</p>
                 <p class="book-author">{{ book.author }}</p>
-                <p class="book-date">{{ book.publishDate }}</p>
+                <p class="book-date">{{ book.pubDate }}</p>
               </div>
             </div>
           </div>

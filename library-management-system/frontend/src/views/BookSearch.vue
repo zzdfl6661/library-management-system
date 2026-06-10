@@ -6,14 +6,13 @@
     </div>
 
     <el-table :data="books" border class="book-table" v-loading="loading" @row-click="handleRowClick">
-      <el-table-column prop="isbn" label="ISBN" width="150" />
-      <el-table-column prop="title" label="书名" min-width="150" />
+      <el-table-column prop="ISBN" label="ISBN" width="150" />
+      <el-table-column prop="bname" label="书名" min-width="150" />
       <el-table-column prop="author" label="作者" width="120" />
       <el-table-column prop="publisher" label="出版社" width="150" />
-      <el-table-column prop="copyCount" label="副本数" width="100" align="center" />
-      <el-table-column prop="availableCount" label="可借数" width="100" align="center">
+      <el-table-column label="状态" width="80" align="center">
         <template #default="scope">
-          <span :class="getAvailableClass(scope.row.availableCount)">{{ scope.row.availableCount }}</span>
+          <span :class="scope.row.bookStatus === 'ONSHELF' ? 'available-high' : 'available-zero'">{{ scope.row.bookStatus === 'ONSHELF' ? '可借' : '下架' }}</span>
         </template>
       </el-table-column>
     </el-table>

@@ -31,15 +31,12 @@ public class BookServiceImpl implements BookService {
     @Override
     public Book getBookByIsbn(String isbn) {
         Book book = bookMapper.selectByIsbn(isbn);
-        if (book == null) {
-            throw new BusinessException("图书不存在");
-        }
         return book;
     }
 
     @Override
     public Book getBookById(Long id) {
-        Book book = bookMapper.selectById(id);
+        Book book = bookMapper.selectById(id.intValue());
         if (book == null) {
             throw new BusinessException("图书不存在");
         }
@@ -65,7 +62,7 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional
     public void createBook(Book book) {
-        Book existingBook = bookMapper.selectByIsbn(book.getIsbn());
+        Book existingBook = bookMapper.selectByIsbn(book.getISBN());
         if (existingBook != null) {
             throw new BusinessException("图书已存在");
         }
@@ -76,7 +73,7 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional
     public void updateBook(Book book) {
-        Book existingBook = bookMapper.selectById(book.getId());
+        Book existingBook = bookMapper.selectById(book.getId().intValue());
         if (existingBook == null) {
             throw new BusinessException("图书不存在");
         }
@@ -89,7 +86,7 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional
     public void offshelfBook(Long id) {
-        Book book = bookMapper.selectById(id);
+        Book book = bookMapper.selectById(id.intValue());
         if (book == null) {
             throw new BusinessException("图书不存在");
         }
@@ -103,7 +100,7 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional
     public void onshelfBook(Long id) {
-        Book book = bookMapper.selectById(id);
+        Book book = bookMapper.selectById(id.intValue());
         if (book == null) {
             throw new BusinessException("图书不存在");
         }
@@ -117,7 +114,7 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional
     public void deleteBook(Long id) {
-        Book book = bookMapper.selectById(id);
+        Book book = bookMapper.selectById(id.intValue());
         if (book == null) {
             throw new BusinessException("图书不存在");
         }
@@ -127,24 +124,24 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public BookDetailResponse getBookDetail(Long id) {
-        Book book = bookMapper.selectById(id);
+        Book book = bookMapper.selectById(id.intValue());
         if (book == null) {
             throw new BusinessException("图书不存在");
         }
-        List<BookCopy> copies = bookCopyMapper.selectByIsbn(book.getIsbn());
+        List<BookCopy> copies = bookCopyMapper.selectByIsbn(book.getISBN());
         
         BookDetailResponse response = new BookDetailResponse();
         response.setId(Long.valueOf(book.getId()));
-        response.setIsbn(book.getIsbn());
+        response.setIsbn(book.getISBN());
         response.setTitle(book.getBname());
         response.setAuthor(book.getAuthor());
         response.setPublisher(book.getPublisher());
         response.setSummary(book.getIntroduction());
-        response.setCopies(copies.stream()
+        response.setCopyInfoList(copies.stream()
                 .filter(c -> c.getStatus() != BookCopyStatus.CANCELLED)
                 .map(copy -> {
                     BookDetailResponse.CopyInfo info = new BookDetailResponse.CopyInfo();
-                    info.setId(Long.valueOf(copy.getIsbn().hashCode()));
+                    info.setId(Long.valueOf(copy.getISBN().hashCode()));
                     info.setBarcode(copy.getBarCode());
                     info.setLocation(copy.getPlace());
                     info.setStatus(copy.getStatus().name());

@@ -62,22 +62,22 @@ const cardData = ref(null)
 const loading = ref(false)
 
 const canReportLost = computed(() => {
-  return cardData.value && cardData.value.status === 'NORMAL'
+  return cardData.value && cardData.value.cardStatus === '正常'
 })
 
 const resultIcon = computed(() => {
   if (!studentData.value) return 'info'
   if (!cardData.value) return 'warning'
-  if (cardData.value.status === 'LOST') return 'warning'
-  if (cardData.value.status === 'CANCELLED') return 'info'
+  if (cardData.value.cardStatus === '挂失') return 'warning'
+  if (cardData.value.cardStatus === '注销') return 'info'
   return 'success'
 })
 
 const resultTitle = computed(() => {
   if (!studentData.value) return ''
   if (!cardData.value) return '该学生未办理借书证'
-  if (cardData.value.status === 'LOST') return '该借书证已挂失'
-  if (cardData.value.status === 'CANCELLED') return '该借书证已注销'
+  if (cardData.value.cardStatus === '挂失') return '该借书证已挂失'
+  if (cardData.value.cardStatus === '注销') return '该借书证已注销'
   return ''
 })
 

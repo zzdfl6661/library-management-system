@@ -93,20 +93,20 @@ const batchFormRef = ref(null)
 const batchLoading = ref(false)
 
 const canCancel = computed(() => {
-  return cardData.value && cardData.value.status !== 'CANCELLED'
+  return cardData.value && cardData.value.cardStatus !== '注销'
 })
 
 const resultIcon = computed(() => {
   if (!studentData.value) return 'info'
   if (!cardData.value) return 'warning'
-  if (cardData.value.status === 'CANCELLED') return 'info'
+  if (cardData.value.cardStatus === '注销') return 'info'
   return 'success'
 })
 
 const resultTitle = computed(() => {
   if (!studentData.value) return ''
   if (!cardData.value) return '该学生未办理借书证'
-  if (cardData.value.status === 'CANCELLED') return '该借书证已注销'
+  if (cardData.value.cardStatus === '注销') return '该借书证已注销'
   return ''
 })
 

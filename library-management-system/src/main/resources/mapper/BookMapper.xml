@@ -37,6 +37,10 @@
         SELECT * FROM book WHERE bookStatus = 1
     </select>
 
+    <select id="selectOnShelfPage" resultMap="BaseResultMap">
+        SELECT * FROM book WHERE bookStatus = 1
+    </select>
+
     <insert id="insert" parameterType="com.library.entity.Book" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO book (ISBN, bname, author, publisher, introduction, pubDate, clcNum, bookStatus)
         VALUES (#{ISBN}, #{bname}, #{author}, #{publisher}, #{introduction}, #{pubDate}, #{clcNum}, #{bookStatus})

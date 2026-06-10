@@ -30,11 +30,11 @@
         </div>
         <div class="info-item">
           <span class="label">出版日期：</span>
-          <span class="value">{{ book.publishDate || '-' }}</span>
+          <span class="value">{{ book.pubDate || '-' }}</span>
         </div>
         <div class="info-item">
           <span class="label">中图分类号：</span>
-          <span class="value">{{ book.clc || '-' }}</span>
+          <span class="value">{{ book.clcNum || '-' }}</span>
         </div>
         <div class="info-item full-width">
           <span class="label">简介：</span>
@@ -108,7 +108,7 @@ const fetchBookDetail = async () => {
     const response = await request.get(`/book/${route.params.id}`)
     if (response.code === 200) {
       book.value = response.data
-      copies.value = response.data.copies || []
+      copies.value = response.data.copyInfoList || response.data.copies || []
     }
   } catch (error) {
     console.error('获取图书详情失败:', error)

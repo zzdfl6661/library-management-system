@@ -35,7 +35,7 @@ public class AcquisitionServiceImpl implements AcquisitionService {
             book = existingBook;
         } else {
             book = new Book();
-            book.setIsbn(request.getIsbn());
+            book.setISBN(request.getIsbn());
             book.setBname(request.getTitle());
             book.setAuthor(request.getAuthor());
             book.setPublisher(request.getPublisher());
@@ -48,7 +48,7 @@ public class AcquisitionServiceImpl implements AcquisitionService {
             int startSequence = existingCopies.size() + 1;
             for (int i = 0; i < request.getCopyCount(); i++) {
                 BookCopy copy = new BookCopy();
-                copy.setIsbn(request.getIsbn());
+                copy.setISBN(request.getIsbn());
                 copy.setBarCode(BarcodeGenerator.generateBarcode(request.getIsbn(), startSequence + i));
                 copy.setPlace(request.getLocation());
                 copy.setStatus(BookCopyStatus.AVAILABLE);
@@ -76,7 +76,7 @@ public class AcquisitionServiceImpl implements AcquisitionService {
     @Override
     @Transactional
     public void withdrawBook(Long bookId) {
-        Book book = bookMapper.selectById(bookId);
+        Book book = bookMapper.selectById(bookId.intValue());
         if (book == null) {
             throw new BusinessException("图书不存在");
         }

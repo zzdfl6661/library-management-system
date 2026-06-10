@@ -28,4 +28,8 @@ public interface LibraryCardService {
     String validateForBorrow(String cardNo);
 
     int getAvailableBorrowCount(String cardNo);
+
+    List<LibraryCard> getAllCards();
+
+    List<LibraryCard> searchCards(String keyword);
 }

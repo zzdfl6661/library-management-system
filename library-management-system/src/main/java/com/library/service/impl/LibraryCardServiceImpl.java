@@ -7,6 +7,7 @@ import com.library.enums.OpType;
 import com.library.enums.StudentType;
 import com.library.exception.BusinessException;
 import com.library.mapper.BorrowRecordMapper;
+import com.library.mapper.CardRecordMapper;
 import com.library.mapper.LibraryCardMapper;
 import com.library.mapper.StudentMapper;
 import com.library.service.CardRecordService;
@@ -199,6 +200,16 @@ public class LibraryCardServiceImpl implements LibraryCardService {
 
         int borrowedCount = borrowRecordMapper.countBySno(card.getSno());
         return maxBorrowCount - borrowedCount;
+    }
+
+    @Override
+    public List<LibraryCard> getAllCards() {
+        return libraryCardMapper.selectAll();
+    }
+
+    @Override
+    public List<LibraryCard> searchCards(String keyword) {
+        return libraryCardMapper.searchByKeyword(keyword);
     }
 
     private Integer getMaxBorrowCount(String studentType) {
