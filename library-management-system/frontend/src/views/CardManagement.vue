@@ -26,10 +26,23 @@
         <el-tab-pane label="新办借书证" name="create">
           <el-form ref="createForm" :model="createForm" label-width="120px" class="create-form">
             <el-form-item label="学号">
-              <el-input v-model="studentNo" placeholder="请输入学号" />
+              <el-input v-model="studentNo" placeholder="请输入学号" style="width: 200px;" />
+              <el-button type="default" @click="handleSearchStudent" style="margin-left: 10px;">查询</el-button>
             </el-form-item>
+            <div v-if="studentInfo" class="student-info">
+              <el-card title="学生基本信息" style="margin-bottom: 15px;">
+                <div class="info-row">
+                  <span class="label">姓名：</span>
+                  <span class="value">{{ studentInfo.name }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">学号：</span>
+                  <span class="value">{{ studentInfo.studentNo }}</span>
+                </div>
+              </el-card>
+            </div>
             <el-form-item>
-              <el-button type="primary" @click="handleCreate">创建借书证</el-button>
+              <el-button type="primary" @click="handleCreate" :disabled="!studentInfo">创建借书证</el-button>
             </el-form-item>
           </el-form>
         </el-tab-pane>
@@ -47,6 +60,7 @@ const activeTab = ref('list')
 const cards = ref([])
 const searchCardNo = ref('')
 const studentNo = ref('')
+const studentInfo = ref(null)
 
 const filteredCards = computed(() => {
   if (!searchCardNo.value || !searchCardNo.value.trim()) {
@@ -96,6 +110,26 @@ const handleTabChange = () => {
   }
 }
 
+const handleSearchStudent = async () => {
+  if (!studentNo.value) {
+    ElMessage.warning('请输入学号')
+    return
+  }
+  try {
+    const response = await request.get(`/students/${studentNo.value}`)
+    if (response.code === 200) {
+      studentInfo.value = response.data
+    } else {
+      ElMessage.error(response.message || '查询失败')
+      studentInfo.value = null
+    }
+  } catch (error) {
+    const errorMsg = error.response?.data?.message || '查询失败'
+    ElMessage.error(errorMsg)
+    studentInfo.value = null
+  }
+}
+
 const handleCreate = async () => {
   if (!studentNo.value) {
     ElMessage.warning('请输入学号')
@@ -106,6 +140,7 @@ const handleCreate = async () => {
     if (response.code === 200) {
       ElMessage.success(response.message)
       studentNo.value = ''
+      studentInfo.value = null
       activeTab.value = 'list'
     } else {
       ElMessage.error(response.message || '创建失败')
@@ -189,5 +224,28 @@ onMounted(() => {
 
 .create-form {
   max-width: 400px;
+}
+
+.student-info {
+  margin-top: 15px;
+}
+
+.info-row {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-row .label {
+  font-weight: bold;
+  color: #606266;
+  min-width: 60px;
+}
+
+.info-row .value {
+  color: #303133;
 }
 </style>
