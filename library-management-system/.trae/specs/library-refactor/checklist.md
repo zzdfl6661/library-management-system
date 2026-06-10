@@ -8,6 +8,8 @@
 - [ ] Check-104: student 表包含 gender, className, idCard 字段
 - [ ] Check-105: libcard 表包含 password 字段
 - [ ] Check-106: borrowrec 表包含 ovdDays, fineMoney, fineStatus, paySerNum 字段（独立 fine_record 表已删除）
+- [ ] Check-107: book.ISBN 有唯一约束
+- [ ] Check-108: book.bookStatus 字段支持 0下架/1上架/2删除 三个值
 
 ## 后端数据层验证
 
@@ -73,12 +75,14 @@
 - [ ] Check-702: 图书列表支持分页
 - [ ] Check-703: 新增图书弹窗可录入完整图书信息
 - [ ] Check-704: 编辑图书弹窗预填原有数据并可修改保存
-- [ ] Check-705: 下架操作正确将 book.bookStatus 改为 0
-- [ ] Check-706: 已下架图书的下架按钮变灰禁用
-- [ ] Check-707: 副本管理页面正确展示当前图书基本信息
-- [ ] Check-708: 新增副本能正确录入条码号和藏书位置
-- [ ] Check-709: 副本编辑功能正常
-- [ ] Check-710: 副本注销功能正确将 status 改为 2
+- [ ] Check-705: 删除操作正确将 book.bookStatus 改为 2（逻辑删除）
+- [ ] Check-706: 下架操作正确将 book.bookStatus 改为 0
+- [ ] Check-707: 已下架图书的下架按钮变灰禁用
+- [ ] Check-708: 已删除图书(bookStatus=2)在检索结果中不出现
+- [ ] Check-709: 副本管理页面正确展示当前图书基本信息
+- [ ] Check-710: 新增副本能正确录入条码号和藏书位置
+- [ ] Check-711: 副本编辑功能正常
+- [ ] Check-712: 副本注销功能正确将 status 改为 2
 
 ## 扫码输入验证
 

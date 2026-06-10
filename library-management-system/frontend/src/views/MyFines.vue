@@ -1,146 +1,197 @@
-
 <template>
   <div class="my-fines">
     <el-card class="fine-summary">
-      <template #header>
-        <span>罚款概览</span>
-      </template>
       <div class="summary-row">
-        <span class="label">未缴罚款：</span>
-        <span class="amount">¥{{ unpaidFine }}</span>
+        <span class="label">未缴罚款总额：</span>
+        <span class="amount">¥{{ unpaidTotal }}</span>
       </div>
     </el-card>
+
     <el-card class="fine-list">
       <template #header>
-        <span>罚款记录</span>
+        <div class="header-row">
+          <span>罚款记录</span>
+          <el-button type="primary" size="small" @click="handleExport">导出记录</el-button>
+        </div>
       </template>
-      <el-table :data="fineRecords" border>
-        <el-table-column prop="borrowRecordId" label="借阅记录ID" />
-        <el-table-column prop="amount" label="金额">
+      <el-table :data="unpaidFines" border stripe @selection-change="handleSelectionChange">
+        <el-table-column type="index" label="序号" width="60" />
+        <el-table-column type="selection" width="50" />
+        <el-table-column prop="bookTitle" label="书名" min-width="150" />
+        <el-table-column prop="author" label="作者" min-width="100" />
+        <el-table-column prop="borrowDate" label="借书日期" width="110" />
+        <el-table-column prop="dueDate" label="应还日期" width="110" />
+        <el-table-column prop="actualReturnDate" label="实还日期" width="110" />
+        <el-table-column label="罚款金额" width="100">
           <template #default="scope">
-            ¥{{ scope.row.amount }}
+            <span class="text-danger">¥{{ scope.row.fineAmount }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="days" label="超期天数" />
-        <el-table-column prop="isPaid" label="状态">
+        <el-table-column label="状态" width="100">
           <template #default="scope">
             <span :class="scope.row.isPaid ? 'text-success' : 'text-danger'">
               {{ scope.row.isPaid ? '已缴纳' : '未缴纳' }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" />
-        <el-table-column label="操作" width="120">
-          <template #default="scope">
-            <el-button
-              v-if="role !== 'OFFICE' && !scope.row.isPaid"
-              type="primary"
-              size="small"
-              @click="handleRepay(scope.row)"
-            >
-              还款
-            </el-button>
-          </template>
-        </el-table-column>
       </el-table>
     </el-card>
-    <el-card v-if="role === 'OFFICE'" class="payment-card">
+
+    <el-card class="payment-card" v-if="selectedFines.length > 0">
       <template #header>
         <span>缴纳罚款</span>
       </template>
-      <el-form label-width="120px" class="payment-form">
-        <el-form-item label="学号">
-          <el-input v-model="paymentForm.studentNo" placeholder="请输入学号" />
-        </el-form-item>
-        <el-form-item label="缴纳金额">
-          <el-input type="number" v-model="paymentForm.amount" placeholder="请输入缴纳金额" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handlePayment">确认缴纳</el-button>
-        </el-form-item>
-      </el-form>
+      <div class="payment-info">
+        <span>已选取：{{ selectedFines.length }} 条记录</span>
+        <span class="selected-amount">已选取金额合计：¥{{ selectedAmount }}</span>
+      </div>
+      <div class="payment-actions">
+        <el-button type="primary" @click="handlePaySelected" :loading="loading">支付选中</el-button>
+        <el-button @click="handlePayAll" :loading="loading">支付全部</el-button>
+      </div>
     </el-card>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '../utils/request'
 
-const unpaidFine = ref('0.00')
-const fineRecords = ref([])
+const unpaidTotal = ref('0.00')
+const unpaidFines = ref([])
+const selectedFines = ref([])
+const loading = ref(false)
 
-const role = ref(localStorage.getItem('role') || '')
-
-const paymentForm = reactive({
-  studentNo: '',
-  amount: ''
+const selectedAmount = computed(() => {
+  return selectedFines.value.reduce((sum, fine) => sum + (fine.fineAmount || 0), 0).toFixed(2)
 })
 
-const handlePayment = async () => {
-  try {
-    const response = await request.post('/fines/pay', {
-      studentNo: paymentForm.studentNo,
-      amount: paymentForm.amount,
-      operatorId: localStorage.getItem('userId')
-    })
-    if (response.code === 200) {
-      ElMessage.success(response.message)
-      paymentForm.studentNo = ''
-      paymentForm.amount = ''
-      loadFines()
-    } else {
-      ElMessage.error(response.message)
-    }
-  } catch (error) {
-    ElMessage.error('缴纳失败')
-  }
-}
-
-const handleRepay = async (row) => {
-  try {
-    console.log('Repaying fine:', row)
-    const response = await request.post(`/fines/${row.id}/repay`)
-    console.log('Response:', response)
-    if (response.code === 200) {
-      ElMessage.success(response.message)
-      loadFines()
-    } else {
-      ElMessage.error(response.message || '还款失败')
-    }
-  } catch (error) {
-    console.error('Repay error:', error)
-    if (error.response) {
-      ElMessage.error('还款失败: ' + error.response.data?.message || error.response.statusText)
-    } else {
-      ElMessage.error('还款失败: ' + error.message)
-    }
-  }
-}
-
-const loadFines = async () => {
-  const studentNo = localStorage.getItem('studentNo') || localStorage.getItem('username')
+const loadUnpaidFines = async () => {
+  const studentNo = localStorage.getItem('studentNo')
   if (!studentNo) return
-  
+
   try {
-    const [totalResponse, recordsResponse] = await Promise.all([
-      request.get(`/fines/student/${studentNo}/total`),
-      request.get(`/fines/student/${studentNo}`)
+    const [totalResponse, finesResponse] = await Promise.all([
+      request.get(`/fine/student/${studentNo}/total`),
+      request.get(`/fine/student/${studentNo}/unpaid`)
     ])
     if (totalResponse.code === 200) {
-      unpaidFine.value = totalResponse.data || '0.00'
+      unpaidTotal.value = totalResponse.data || '0.00'
     }
-    if (recordsResponse.code === 200) {
-      fineRecords.value = recordsResponse.data || []
+    if (finesResponse.code === 200) {
+      unpaidFines.value = finesResponse.data || []
     }
   } catch (error) {
     console.error('获取罚款记录失败:', error)
   }
 }
 
+const handleSelectionChange = (selection) => {
+  selectedFines.value = selection
+}
+
+const handlePaySelected = async () => {
+  if (selectedFines.value.length === 0) {
+    ElMessage.warning('请先选择要支付的罚款记录')
+    return
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      `确定要支付选中的 ${selectedFines.value.length} 条罚款记录，总金额 ¥${selectedAmount.value} 吗？`,
+      '确认支付',
+      { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
+    )
+
+    loading.value = true
+    const serNums = selectedFines.value.map(f => f.serNum)
+    const response = await request.post('/fine/pay', {
+      serNums: serNums,
+      amount: parseFloat(selectedAmount.value)
+    })
+
+    if (response.code === 200) {
+      ElMessage.success('支付成功')
+      selectedFines.value = []
+      loadUnpaidFines()
+    } else {
+      ElMessage.error(response.message || '支付失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('支付失败:', error)
+      ElMessage.error('支付失败')
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+const handlePayAll = async () => {
+  if (unpaidFines.value.length === 0) {
+    ElMessage.warning('没有未支付的罚款记录')
+    return
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      `确定要支付全部 ${unpaidFines.value.length} 条罚款记录，总金额 ¥${unpaidTotal.value} 吗？`,
+      '确认支付',
+      { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
+    )
+
+    loading.value = true
+    const studentNo = localStorage.getItem('studentNo')
+    const response = await request.post(`/fine/pay/all/${studentNo}`)
+
+    if (response.code === 200) {
+      ElMessage.success('支付成功')
+      selectedFines.value = []
+      loadUnpaidFines()
+    } else {
+      ElMessage.error(response.message || '支付失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('支付失败:', error)
+      ElMessage.error('支付失败')
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleExport = () => {
+  const data = unpaidFines.value.map((fine, index) => ({
+    序号: index + 1,
+    书名: fine.bookTitle,
+    作者: fine.author,
+    借书日期: fine.borrowDate,
+    应还日期: fine.dueDate,
+    实还日期: fine.actualReturnDate || '-',
+    罚款金额: fine.fineAmount,
+    状态: fine.isPaid ? '已缴纳' : '未缴纳'
+  }))
+
+  const headers = ['序号', '书名', '作者', '借书日期', '应还日期', '实还日期', '罚款金额', '状态']
+  const csvContent = [
+    headers.join(','),
+    ...data.map(row => headers.map(h => `"${row[h]}"`).join(','))
+  ].join('\n')
+
+  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = `罚款记录_${new Date().toISOString().slice(0, 10)}.csv`
+  link.click()
+  URL.revokeObjectURL(link.href)
+
+  ElMessage.success('导出成功')
+}
+
 onMounted(() => {
-  loadFines()
+  loadUnpaidFines()
 })
 </script>
 
@@ -153,6 +204,8 @@ onMounted(() => {
 
 .fine-summary {
   margin-bottom: 20px;
+  background: #fff3f3;
+  border-color: #f56c6c;
 }
 
 .summary-row {
@@ -172,19 +225,42 @@ onMounted(() => {
   margin-left: 10px;
 }
 
-.fine-list {
-  margin-bottom: 20px;
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.text-success {
-  color: #13ce66;
+.payment-card {
+  margin-top: 20px;
+}
+
+.payment-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 10px;
+  background: #f5f7fa;
+  border-radius: 4px;
+}
+
+.selected-amount {
+  font-size: 18px;
+  color: #f56c6c;
+  font-weight: bold;
+}
+
+.payment-actions {
+  display: flex;
+  gap: 10px;
 }
 
 .text-danger {
   color: #f56c6c;
 }
 
-.payment-form {
-  max-width: 400px;
+.text-success {
+  color: #67c23a;
 }
 </style>

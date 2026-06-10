@@ -1,16 +1,23 @@
-
 package com.library.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@TableName("payrec")
 public class PaymentRecord {
-    private Long id;
-    private Long studentId;
-    private BigDecimal amount;
-    private Long operatorId;
-    private LocalDateTime createTime;
+    @TableId(type = IdType.AUTO)
+    private Integer serNum;
+    private String sno;
+    private BigDecimal payAmount;
+    private LocalDate payDate;
 }

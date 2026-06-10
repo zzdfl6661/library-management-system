@@ -2,29 +2,58 @@
   <div class="login-container">
     <div class="login-box">
       <h2>图书馆管理系统</h2>
+      <el-tabs v-model="loginType" class="login-tabs">
+        <el-tab-pane label="管理员登录" name="admin"></el-tab-pane>
+        <el-tab-pane label="读者登录" name="reader"></el-tab-pane>
+      </el-tabs>
+      
       <el-form ref="loginFormRef" :model="form" label-width="80px" class="login-form">
-        <el-form-item label="用户名" prop="username">
-          <el-input
-            v-model="form.username"
-            placeholder="请输入用户名"
-            autocomplete="username"
-            clearable
-          />
-        </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input
-            v-model="form.password"
-            type="password"
-            placeholder="请输入密码"
-            autocomplete="current-password"
-            show-password
-            @keyup.enter="handleLogin"
-          />
-        </el-form-item>
+        <template v-if="loginType === 'admin'">
+          <el-form-item label="用户名" prop="username">
+            <el-input
+              v-model="form.username"
+              placeholder="请输入用户名"
+              autocomplete="username"
+              clearable
+            />
+          </el-form-item>
+          <el-form-item label="密码" prop="password">
+            <el-input
+              v-model="form.password"
+              type="password"
+              placeholder="请输入密码"
+              autocomplete="current-password"
+              show-password
+              @keyup.enter="handleLogin"
+            />
+          </el-form-item>
+        </template>
+        
+        <template v-else>
+          <el-form-item label="借书证号" prop="cardNo">
+            <el-input
+              v-model="form.cardNo"
+              placeholder="请输入借书证号"
+              clearable
+              @keyup.enter="handleLogin"
+            />
+          </el-form-item>
+          <el-form-item label="密码" prop="password">
+            <el-input
+              v-model="form.password"
+              type="password"
+              placeholder="请输入密码"
+              show-password
+              @keyup.enter="handleLogin"
+            />
+          </el-form-item>
+        </template>
+        
         <el-form-item>
           <el-button type="primary" @click="handleLogin" class="login-btn" :loading="loading">登录</el-button>
         </el-form-item>
       </el-form>
+      
       <div class="tips">
         <p>管理员账号：office / circulation / acquisition</p>
         <p>学生账号：student1 / student2 / student3 或使用学号登录</p>
@@ -44,28 +73,49 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const loginFormRef = ref(null)
 const loading = ref(false)
+const loginType = ref('admin')
 
 const form = reactive({
   username: '',
+  cardNo: '',
   password: ''
 })
 
 const handleLogin = async () => {
-  if (!form.username || !form.password) {
-    ElMessage.warning('请输入用户名和密码')
-    return
+  if (loginType.value === 'admin') {
+    if (!form.username || !form.password) {
+      ElMessage.warning('请输入用户名和密码')
+      return
+    }
+  } else {
+    if (!form.cardNo || !form.password) {
+      ElMessage.warning('请输入借书证号和密码')
+      return
+    }
   }
 
   loading.value = true
   try {
-    const response = await request.post('/auth/login', form)
+    let response
+    if (loginType.value === 'admin') {
+      response = await request.post('/auth/login', {
+        username: form.username,
+        password: form.password
+      })
+    } else {
+      response = await request.post('/auth/reader-login', {
+        cardNo: form.cardNo,
+        password: form.password
+      })
+    }
+    
     if (response.code === 200) {
       localStorage.setItem('token', response.data.token)
-      localStorage.setItem('username', response.data.username)
+      localStorage.setItem('username', response.data.username || response.data.name)
       localStorage.setItem('role', response.data.role)
       localStorage.setItem('userId', response.data.id)
       if (response.data.role === 'STUDENT') {
-        localStorage.setItem('studentNo', response.data.username)
+        localStorage.setItem('studentNo', response.data.username || response.data.studentNo)
       } else if (response.data.studentNo) {
         localStorage.setItem('studentNo', response.data.studentNo)
       }
@@ -76,7 +126,7 @@ const handleLogin = async () => {
     }
   } catch (error) {
     console.error('登录失败:', error)
-    ElMessage.error('登录失败，请检查网络或账号密码')
+    ElMessage.error(error.response?.data?.message || '登录失败，请检查网络或账号密码')
   } finally {
     loading.value = false
   }
@@ -108,12 +158,16 @@ const handleLogin = async () => {
 
 .login-box h2 {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   color: #333;
 }
 
+.login-tabs {
+  margin-bottom: 20px;
+}
+
 .login-form {
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 .login-form :deep(.el-input) {

@@ -1,72 +1,110 @@
-
 package com.library.controller;
 
-import com.library.dto.request.CardCreateRequest;
 import com.library.dto.response.ApiResponse;
-import com.library.dto.response.CardResponse;
+import com.library.dto.response.StudentCardInfo;
+import com.library.entity.CardRecord;
 import com.library.entity.LibraryCard;
+import com.library.entity.Student;
+import com.library.service.CardRecordService;
 import com.library.service.LibraryCardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/cards")
-@CrossOrigin(origins = "http://localhost:5173")
+@RequestMapping("/api/card")
+@CrossOrigin(origins = "*")
 public class CardController {
 
     @Autowired
     private LibraryCardService libraryCardService;
 
-    @PostMapping
-    public ApiResponse<LibraryCard> createCard(@RequestBody CardCreateRequest request) {
-        LibraryCard card = libraryCardService.createCard(request);
-        return ApiResponse.success("借书证创建成功", card);
-    }
+    @Autowired
+    private CardRecordService cardRecordService;
 
-    @PutMapping("/{cardNo}/lost")
-    public ApiResponse<Void> reportLost(@PathVariable String cardNo) {
-        libraryCardService.reportLost(cardNo);
-        return ApiResponse.success("挂失成功");
-    }
-
-    @PutMapping("/{cardNo}/reissue")
-    public ApiResponse<LibraryCard> reissueCard(@PathVariable String cardNo) {
-        LibraryCard card = libraryCardService.reissueCard(cardNo);
-        return ApiResponse.success("补办成功", card);
-    }
-
-    @PutMapping("/{cardNo}/cancel")
-    public ApiResponse<Void> cancelCard(@PathVariable String cardNo) {
-        libraryCardService.cancelCard(cardNo);
-        return ApiResponse.success("注销成功");
-    }
-
-    @GetMapping("/{cardNo}")
-    public ApiResponse<LibraryCard> getCardByCardNo(@PathVariable String cardNo) {
-        LibraryCard card = libraryCardService.getByCardNo(cardNo);
-        return ApiResponse.success(card);
-    }
-
-    @GetMapping("/{cardNo}/info")
-    public ApiResponse<CardResponse> getCardInfoWithAvailableCount(@PathVariable String cardNo) {
-        CardResponse response = libraryCardService.getCardInfoWithAvailableCount(cardNo);
-        if (response == null) {
-            throw new com.library.exception.BusinessException("借书证不存在");
+    @GetMapping("/student/{sno}")
+    public ApiResponse<Map<String, Object>> getStudentInfo(@PathVariable String sno) {
+        Student student = libraryCardService.getStudentBySno(sno);
+        if (student == null) {
+            return ApiResponse.error(404, "学生不存在");
         }
-        return ApiResponse.success(response);
+        
+        LibraryCard card = libraryCardService.getCardBySno(sno);
+        boolean hasValidCard = libraryCardService.hasValidCard(sno);
+        int availableBorrowCount = 0;
+        if (hasValidCard && card != null) {
+            availableBorrowCount = libraryCardService.getAvailableBorrowCount(card.getCardNo());
+        }
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("student", student);
+        result.put("card", card);
+        result.put("hasValidCard", hasValidCard);
+        result.put("availableBorrowCount", availableBorrowCount);
+        
+        return ApiResponse.success(result);
     }
 
-    @GetMapping
-    public ApiResponse<List<LibraryCard>> getAllCards() {
-        List<LibraryCard> cards = libraryCardService.getAllCards();
-        return ApiResponse.success(cards);
+    @PostMapping("/create")
+    public ApiResponse<Void> createCard(@RequestBody Map<String, String> request) {
+        String sno = request.get("sno");
+        String cardNo = request.get("cardNo");
+        if (sno == null || cardNo == null) {
+            return ApiResponse.error(400, "参数不完整");
+        }
+        libraryCardService.createCard(sno, cardNo);
+        return ApiResponse.success("借书证创建成功", null);
     }
 
-    @GetMapping("/search")
-    public ApiResponse<List<LibraryCard>> searchCards(@RequestParam(required = false) String cardNo) {
-        List<LibraryCard> cards = libraryCardService.searchCards(cardNo);
-        return ApiResponse.success(cards);
+    @PostMapping("/create/batch")
+    public ApiResponse<Void> createCards(@RequestBody Map<String, List<String>> request) {
+        List<String> snos = request.get("snos");
+        List<String> cardNos = request.get("cardNos");
+        if (snos == null || cardNos == null || snos.size() != cardNos.size()) {
+            return ApiResponse.error(400, "参数不完整或数量不匹配");
+        }
+        libraryCardService.createCards(snos, cardNos);
+        return ApiResponse.success("批量借书证创建成功", null);
+    }
+
+    @PutMapping("/report-lost/{sno}")
+    public ApiResponse<Void> reportLost(@PathVariable String sno) {
+        libraryCardService.reportLost(sno);
+        return ApiResponse.success("挂失成功", null);
+    }
+
+    @PutMapping("/reissue")
+    public ApiResponse<Void> reissueCard(@RequestBody Map<String, String> request) {
+        String sno = request.get("sno");
+        String newCardNo = request.get("newCardNo");
+        if (sno == null || newCardNo == null) {
+            return ApiResponse.error(400, "参数不完整");
+        }
+        libraryCardService.reissueCard(sno, newCardNo);
+        return ApiResponse.success("补办成功", null);
+    }
+
+    @PutMapping("/cancel/{sno}")
+    public ApiResponse<Void> cancelCard(@PathVariable String sno) {
+        libraryCardService.cancelCard(sno);
+        return ApiResponse.success("注销成功", null);
+    }
+
+    @PutMapping("/cancel/batch")
+    public ApiResponse<Void> cancelCards(@RequestBody List<String> snos) {
+        if (snos == null || snos.isEmpty()) {
+            return ApiResponse.error(400, "学号列表不能为空");
+        }
+        libraryCardService.cancelCards(snos);
+        return ApiResponse.success("批量注销成功", null);
+    }
+
+    @GetMapping("/records/{sno}")
+    public ApiResponse<List<CardRecord>> getCardRecords(@PathVariable String sno) {
+        List<CardRecord> records = cardRecordService.getRecordsBySno(sno);
+        return ApiResponse.success(records);
     }
 }

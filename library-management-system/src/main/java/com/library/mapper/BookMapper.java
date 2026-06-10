@@ -1,21 +1,32 @@
-
 package com.library.mapper;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.library.entity.Book;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
 @Mapper
 public interface BookMapper {
+    Book selectByIsbn(@Param("ISBN") String ISBN);
+
     Book selectById(@Param("id") Long id);
-    Book selectByIsbn(@Param("isbn") String isbn);
-    List<Book> search(@Param("title") String title, @Param("author") String author, 
-                      @Param("isbn") String isbn, @Param("publisher") String publisher);
-    List<Book> searchByKeyword(@Param("keyword") String keyword);
+
+    List<Book> selectByKeyword(@Param("keyword") String keyword);
+
     List<Book> selectAll();
+
     int insert(Book book);
-    int update(Book book);
-    int deleteById(@Param("id") Long id);
+
+    int updateById(Book book);
+
+    List<Book> selectOnShelf();
+
+    IPage<Book> selectOnShelfPage(Page<Book> page);
+
+    @Select("SELECT * FROM book WHERE bookStatus = 1 ORDER BY id DESC LIMIT #{limit}")
+    List<Book> selectNewBooks(@Param("limit") int limit);
 }

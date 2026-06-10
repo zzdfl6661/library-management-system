@@ -44,18 +44,25 @@
 
 ### FR-1: 数据库架构对齐 library.sql
 
-所有数据表必须按照 `library.sql` 结构重建：
+所有数据表必须按照 `library.sql` 结构重建，并按用户确认新增必要字段：
 
 | 表名 | 核心字段 | 主键 | 索引 |
 |:---|:---|:---|:---|
 | **admin** | id, username, password, adminType(0证件/1采编/2流通) | id | - |
-| **student** | sno, username, type, collage, major, birth, originPlace, password, id, **gender**, **className**, **idCard** | id (sno 唯一) | sno |
+| **student** | id, sno, username, type, collage, major, birth, originPlace, password, **gender**, **className**, **idCard** | id (sno 唯一) | sno |
 | **libcard** | cardNo, sno, sname, type, collage, major, birth, originPlace, cardStatus, times, **password** | cardNo | sno |
-| **book** | id, ISBN, bname, author, publisher, introduction, pubDate, clcNum, bookStatus(0下架, 1上架) | id | ISBN |
+| **book** | id, ISBN, bname, author, publisher, introduction, pubDate, clcNum, bookStatus(0下架,1上架,**2删除**) | id (ISBN 唯一) | ISBN |
 | **bookcopy** | barCode, ISBN, place, status(0借出,1可借,2注销), oldStatus | barCode | ISBN |
 | **borrowrec** | serNum, sno, barCode, borDate, retDate, realRetDate, retStatus, ovdDays, fineMoney, fineStatus, paySerNum | serNum | sno, barCode |
 | **payrec** | serNum, sno, payAmount, payDate | serNum | sno |
 | **cardrec** | serNum, sno, originCardNo, newCardNo, opType(新办/挂失/补办/注销) | serNum | sno |
+
+**新增字段说明**:
+- `student.gender` (性别): VARCHAR(10)
+- `student.className` (班级): VARCHAR(50)
+- `student.idCard` (身份证号): VARCHAR(20)
+- `libcard.password` (密码): VARCHAR(50)
+- `book.bookStatus` 增加值 2 表示逻辑删除
 
 ### FR-2: 证件办理模块
 
@@ -156,7 +163,8 @@
 - **新增**: 弹出窗口录入图书基础信息
 - **编辑**: 点击"编辑"按钮，弹出带原有数据的编辑窗口
 - **下架**: 将 book.bookStatus 改为 0，按钮变灰
-- **删除**: 物理删除（或软删除，需要确认）
+- **删除**: 逻辑删除，将 book.bookStatus 改为 2（不物理删除数据）
+- 检索结果过滤 bookStatus=2（已删除）的图书
 
 **FR-5.2 图书副本管理**
 - 入口：点击图书列表中的"副本"按钮
@@ -178,8 +186,9 @@
 - **NFR-1 扫码兼容性**: 所有需要输入卡号/学号/条码号的输入框必须支持扫码枪扫码输入
 - **NFR-2 性能**: 图书检索响应时间 < 2 秒（10万条图书数据）
 - **NFR-3 可用性**: 页面布局四个证件办理功能页面保持一致，学生信息展示段使用同一组件
-- **NFR-4 安全性**: 管理员需登录后操作；读者修改个人信息需验证密码
+- **NFR-4 安全性**: 管理员需登录后操作；读者修改个人信息需验证密码；流通部借还**暂时无需登录**
 - **NFR-5 可维护性**: 所有状态值（bookStatus、cardStatus、copy status、retStatus、fineStatus）统一管理，避免魔法值
+- **NFR-6 数据完整性**: 图书删除采用逻辑删除，book.bookStatus=2 表示已删除
 
 ---
 
@@ -192,10 +201,13 @@
 
 ## Assumptions
 - 扫码枪通过模拟键盘输入工作，前端输入框自动聚焦即可支持
-- 学生类型（本科生/研究生/教师）决定最大借阅数量（5/10/15本）
+- 学生类型（本科生/研究生/教师）决定最大借阅数量（5/10/15本）✅ **已确认**
 - 超期罚款按 0.1 元/天计算
-- 图书 ISBN 业务唯一，同一 ISBN 只对应一条 book 记录
+- 图书 ISBN 业务唯一，同一 ISBN 只对应一条 book 记录 ✅ **已确认**
 - 同一时刻一本图书副本仅能借给一个读者
+- 图书"删除"操作采用逻辑删除（book 表增加 deleted 字段或 bookStatus=2 表示已删除）✅ **已确认**
+- student 表包含 gender(性别)、className(班级)、idCard(身份证号) 字段 ✅ **已确认**
+- 流通部（借书/还书）暂时无需登录 ✅ **已确认**
 
 ---
 
@@ -269,8 +281,8 @@
 
 ### AC-12: 采编图书管理
 - **Given**: 采编管理员已登录
-- **When**: 新增/编辑/下架图书
-- **Then**: book 表数据正确更新；下架后 bookStatus=0，检索时不可见
+- **When**: 新增/编辑/下架/删除图书
+- **Then**: book 表数据正确更新；删除为逻辑删除(bookStatus=2)；下架后 bookStatus=0，检索时不可见
 - **Verification**: `programmatic`
 
 ### AC-13: 副本管理
@@ -295,10 +307,10 @@
 
 ## Open Questions
 
-1. ❓ **学生表字段扩展**: student 表是否需要新增 gender(性别)、className(班级)、idCard(身份证号) 字段？（需求中挂失页面需要展示这些信息）
-2. ❓ **最大借阅数配置**: 是否按 student.type 动态判断（本科生5本/研究生10本/教师15本），还是在表中增加 maxBorrow 字段？
-3. ❓ **图书 ISBN 唯一性**: 是否强制 book.ISBN 唯一？如果允许重复，bookcopy 通过 ISBN 关联 book 时如何处理？
-4. ❓ **流通部登录策略**: "无需登录"是完全免登录，还是简单工号认证？
-5. ❓ **图书删除策略**: "删除"操作是物理删除还是逻辑删除（bookStatus 新增一个值如 -1）？
+> ✅ **所有问题已由用户确认**（2026-06-10）
 
-> 以上问题在需求分析计划文档中已有推荐方案，待用户确认后开始开发。
+1. ✅ **学生表字段扩展**: student 表新增 gender(性别)、className(班级)、idCard(身份证号) 字段
+2. ✅ **最大借阅数配置**: 按 student.type 动态判断（本科生5本/研究生10本/教师15本）
+3. ✅ **图书 ISBN 唯一性**: book.ISBN 强制业务唯一
+4. ✅ **流通部登录策略**: 暂时完全免登录
+5. ✅ **图书删除策略**: 逻辑删除（deleted 字段或 bookStatus=2）

@@ -17,6 +17,8 @@
   - 表名：admin, student, libcard, book, bookcopy, borrowrec, payrec, cardrec
   - student 表新增：gender, className, idCard
   - libcard 表新增：password 字段
+  - book 表新增 bookStatus 字段支持逻辑删除（0下架/1上架/2删除）
+  - book.ISBN 强制唯一约束
   - 添加合理索引（sno, ISBN, barCode 等）
   - 添加测试数据初始化脚本（可选）
 - **Acceptance Criteria Addressed**: AC-1

@@ -1,25 +1,25 @@
-
 package com.library.dto.response;
 
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Data
 public class BorrowRecordResponse {
-    private Long id;
-    private String cardNo;
+    private Integer serNum;
+    private String sno;
     private String studentName;
+    private String barCode;
     private String bookTitle;
-    private String barcode;
-    private LocalDate borrowDate;
-    private LocalDate dueDate;
-    private LocalDate returnDate;
-    private Integer isOverdue;
-    private LocalDateTime createTime;
-    private BigDecimal fineAmount;
-    private Integer finePaid;
-    private Integer hasFine;
+    private String author;
+    private String publisher;
+    private String place;
+    private LocalDate borDate;
+    private LocalDate retDate;
+    private LocalDate realRetDate;
+    private String retStatus;
+    private Integer ovdDays;
+    private BigDecimal fineMoney;
+    private String fineStatus;
 }

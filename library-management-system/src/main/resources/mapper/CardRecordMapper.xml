@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.mapper.CardRecordMapper">
+    <resultMap id="BaseResultMap" type="com.library.entity.CardRecord">
+        <id column="serNum" property="serNum"/>
+        <result column="sno" property="sno"/>
+        <result column="originCardNo" property="originCardNo"/>
+        <result column="newCardNo" property="newCardNo"/>
+        <result column="opType" property="opType"/>
+    </resultMap>
+
+    <select id="selectBySno" resultMap="BaseResultMap">
+        SELECT * FROM cardrec WHERE sno = #{sno}
+    </select>
+
+    <select id="selectByCardNo" resultMap="BaseResultMap">
+        SELECT * FROM cardrec WHERE originCardNo = #{cardNo} OR newCardNo = #{cardNo}
+    </select>
+
+    <insert id="insert" parameterType="com.library.entity.CardRecord" useGeneratedKeys="true" keyProperty="serNum">
+        INSERT INTO cardrec (sno, originCardNo, newCardNo, opType)
+        VALUES (#{sno}, #{originCardNo}, #{newCardNo}, #{opType})
+    </insert>
+</mapper>

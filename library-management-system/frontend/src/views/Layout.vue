@@ -17,17 +17,31 @@
           <i class="el-icon-user"></i>
           <span>借书证管理</span>
         </el-menu-item>
-        <el-menu-item v-if="role === 'CIRCULATION'" index="/borrow">
+        <el-sub-menu v-if="role === 'OFFICE'" index="card-management">
+          <template #title>
+            <i class="el-icon-postcard"></i>
+            <span>证件办理</span>
+          </template>
+          <el-menu-item index="/card/create">新办借书证</el-menu-item>
+          <el-menu-item index="/card/report-lost">挂失</el-menu-item>
+          <el-menu-item index="/card/reissue">补办</el-menu-item>
+          <el-menu-item index="/card/cancel">注销</el-menu-item>
+        </el-sub-menu>
+        <el-menu-item v-if="role === 'CIRCULATION'" index="/circulation/borrow">
           <i class="el-icon-plus"></i>
-          <span>借书管理</span>
+          <span>借书</span>
         </el-menu-item>
-        <el-menu-item v-if="role === 'CIRCULATION'" index="/return">
+        <el-menu-item v-if="role === 'CIRCULATION'" index="/circulation/return">
           <i class="el-icon-minus"></i>
-          <span>还书管理</span>
+          <span>还书</span>
         </el-menu-item>
-        <el-menu-item v-if="role === 'ACQUISITION'" index="/acquisition">
+        <el-menu-item v-if="role === 'ACQUISITION'" index="/acquisition/books">
           <i class="el-icon-folder-add"></i>
-          <span>新书入库</span>
+          <span>图书管理</span>
+        </el-menu-item>
+        <el-menu-item v-if="role === 'STUDENT'" index="/myprofile">
+          <i class="el-icon-user"></i>
+          <span>个人信息</span>
         </el-menu-item>
         <el-menu-item v-if="role === 'STUDENT'" index="/myborrows">
           <i class="el-icon-document"></i>
@@ -80,7 +94,7 @@ const roleName = computed(() => {
 })
 
 onMounted(() => {
-  username.value = localStorage.getItem('username') || ''
+  username.value = localStorage.getItem('username') || localStorage.getItem('cardNo') || ''
   role.value = localStorage.getItem('role') || ''
   activeMenu.value = route.path || '/'
 })
@@ -92,10 +106,16 @@ const handleMenuSelect = (index) => {
 const handleLogout = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('username')
+  localStorage.removeItem('cardNo')
+  localStorage.removeItem('studentNo')
   localStorage.removeItem('role')
   localStorage.removeItem('userId')
   ElMessage.success('退出成功')
-  router.push('/login')
+  if (role.value === 'STUDENT') {
+    router.push('/reader-login')
+  } else {
+    router.push('/login')
+  }
 }
 </script>
 
