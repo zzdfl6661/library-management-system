@@ -1,31 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
-"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.library.mapper.LibraryCardMapper">
-    <select id="selectById" resultType="com.library.entity.LibraryCard">
-        SELECT * FROM library_card WHERE id = #{id}
+    <resultMap id="BaseResultMap" type="com.library.entity.LibraryCard">
+        <id column="cardNo" property="cardNo"/>
+        <result column="sno" property="sno"/>
+        <result column="sname" property="sname"/>
+        <result column="type" property="type"/>
+        <result column="collage" property="collage"/>
+        <result column="major" property="major"/>
+        <result column="birth" property="birth"/>
+        <result column="originPlace" property="originPlace"/>
+        <result column="cardStatus" property="cardStatus"/>
+        <result column="times" property="times"/>
+        <result column="password" property="password"/>
+    </resultMap>
+
+    <select id="selectByCardNo" resultMap="BaseResultMap">
+        SELECT * FROM libcard WHERE cardNo = #{cardNo}
     </select>
-    <select id="selectByCardNo" resultType="com.library.entity.LibraryCard">
-        SELECT * FROM library_card WHERE card_no = #{cardNo}
+
+    <select id="selectBySno" resultMap="BaseResultMap">
+        SELECT * FROM libcard WHERE sno = #{sno}
     </select>
-    <select id="selectByStudentId" resultType="com.library.entity.LibraryCard">
-        SELECT * FROM library_card WHERE student_id = #{studentId}
+
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT * FROM libcard WHERE cardStatus = #{status}
     </select>
-    <select id="selectAll" resultType="com.library.entity.LibraryCard">
-        SELECT * FROM library_card
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT * FROM libcard
     </select>
-    <select id="selectByCardNoLike" resultType="com.library.entity.LibraryCard">
-        SELECT * FROM library_card WHERE card_no LIKE CONCAT('%', #{cardNo}, '%')
+
+    <select id="searchByKeyword" resultMap="BaseResultMap">
+        SELECT * FROM libcard
+        WHERE cardNo LIKE CONCAT('%', #{keyword}, '%')
+           OR sname LIKE CONCAT('%', #{keyword}, '%')
     </select>
+
     <insert id="insert" parameterType="com.library.entity.LibraryCard">
-        INSERT INTO library_card (card_no, student_id, status, issue_date, create_time)
-        VALUES (#{cardNo}, #{studentId}, #{status}, #{issueDate}, #{createTime})
+        INSERT INTO libcard (cardNo, sno, sname, type, collage, major, birth, originPlace, cardStatus, times, password)
+        VALUES (#{cardNo}, #{sno}, #{sname}, #{type}, #{collage}, #{major}, #{birth}, #{originPlace}, #{cardStatus}, #{times}, #{password})
     </insert>
-    <update id="update" parameterType="com.library.entity.LibraryCard">
-        UPDATE library_card SET card_no = #{cardNo}, student_id = #{studentId}, 
-               status = #{status}, issue_date = #{issueDate} WHERE id = #{id}
+
+    <update id="updateByCardNo" parameterType="com.library.entity.LibraryCard">
+        UPDATE libcard
+        SET sno = #{sno},
+            sname = #{sname},
+            type = #{type},
+            collage = #{collage},
+            major = #{major},
+            birth = #{birth},
+            originPlace = #{originPlace},
+            cardStatus = #{cardStatus},
+            times = #{times},
+            password = #{password}
+        WHERE cardNo = #{cardNo}
     </update>
-    <delete id="deleteById">
-        DELETE FROM library_card WHERE id = #{id}
-    </delete>
 </mapper>

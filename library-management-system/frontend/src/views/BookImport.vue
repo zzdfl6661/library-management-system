@@ -1,132 +1,470 @@
-
 <template>
   <div class="acquisition-page">
-    <el-card class="import-card">
+    <el-card>
       <template #header>
-        <span>新书入库</span>
+        <div class="card-header">
+          <span>图书管理</span>
+          <el-button type="primary" @click="openAddDialog">新增图书</el-button>
+        </div>
       </template>
-      <el-form ref="importForm" :model="importForm" label-width="120px" class="import-form">
-        <el-form-item label="ISBN">
-          <el-input v-model="importForm.isbn" placeholder="请输入ISBN" />
+
+      <!-- 查询区域 -->
+      <div class="search-area">
+        <el-input
+          v-model="searchKeyword"
+          placeholder="请输入ISBN、书名或作者进行搜索"
+          @keyup.enter="searchBooks"
+          clearable
+          class="search-input"
+        >
+          <template #append>
+            <el-button @click="searchBooks">查询</el-button>
+          </template>
+        </el-input>
+      </div>
+
+      <!-- 图书列表 -->
+      <el-table
+        :data="bookList"
+        border
+        v-loading="loading"
+        class="book-table"
+      >
+        <el-table-column prop="isbn" label="ISBN" width="150" />
+        <el-table-column prop="bname" label="书名" min-width="150" />
+        <el-table-column prop="author" label="作者" width="100" />
+        <el-table-column prop="publisher" label="出版社" width="120" />
+        <el-table-column prop="publishDate" label="出版日期" width="100" />
+        <el-table-column label="副本数" width="80" align="center">
+          <template #default="scope">
+            <el-button type="text" @click="openCopiesDialog(scope.row)">
+              {{ scope.row.copyCount || 0 }}
+            </el-button>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="220" fixed="right">
+          <template #default="scope">
+            <el-button 
+              size="small" 
+              @click="handleOffshelf(scope.row)"
+              :disabled="scope.row.status === 'OFFSHELF'"
+            >
+              下架
+            </el-button>
+            <el-button 
+              size="small" 
+              type="warning"
+              @click="handleOnshelf(scope.row)"
+              :disabled="scope.row.status !== 'OFFSHELF'"
+            >
+              上架
+            </el-button>
+            <el-button size="small" @click="openEditDialog(scope.row)">编辑</el-button>
+            <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 分页 -->
+      <el-pagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :total="total"
+        :page-sizes="[10, 20, 50]"
+        layout="total, sizes, prev, pager, next, jumper"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        class="pagination"
+      />
+    </el-card>
+
+    <!-- 新增/编辑图书弹窗 -->
+    <el-dialog
+      v-model="bookDialogVisible"
+      :title="isEdit ? '编辑图书' : '新增图书'"
+      width="600px"
+      @close="resetBookForm"
+    >
+      <el-form :model="bookForm" label-width="120px" ref="bookFormRef" :rules="bookRules">
+        <el-form-item label="ISBN" prop="isbn">
+          <el-input v-model="bookForm.isbn" :disabled="isEdit" />
         </el-form-item>
-        <el-form-item label="书名">
-          <el-input v-model="importForm.title" placeholder="请输入书名" />
+        <el-form-item label="书名" prop="bname">
+          <el-input v-model="bookForm.bname" />
         </el-form-item>
-        <el-form-item label="作者">
-          <el-input v-model="importForm.author" placeholder="请输入作者" />
+        <el-form-item label="作者" prop="author">
+          <el-input v-model="bookForm.author" />
         </el-form-item>
-        <el-form-item label="出版社">
-          <el-input v-model="importForm.publisher" placeholder="请输入出版社" />
+        <el-form-item label="出版社" prop="publisher">
+          <el-input v-model="bookForm.publisher" />
         </el-form-item>
-        <el-form-item label="简介">
-          <el-textarea v-model="importForm.summary" placeholder="请输入简介" rows="3" />
+        <el-form-item label="简介" prop="summary">
+          <el-input v-model="bookForm.summary" type="textarea" rows="3" />
         </el-form-item>
-        <el-form-item label="副本数量">
-          <el-input type="number" v-model="importForm.copyCount" placeholder="请输入副本数量" />
+        <el-form-item label="出版日期" prop="publishDate">
+          <el-date-picker
+            v-model="bookForm.publishDate"
+            type="date"
+            placeholder="选择出版日期"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
+          />
         </el-form-item>
-        <el-form-item label="馆藏位置">
-          <el-input v-model="importForm.location" placeholder="请输入馆藏位置" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleImport">确认入库</el-button>
+        <el-form-item label="中图分类号" prop="clc">
+          <el-input v-model="bookForm.clc" />
         </el-form-item>
       </el-form>
-    </el-card>
-    <el-card class="actions-card">
-      <template #header>
-        <span>其他操作</span>
+      <template #footer>
+        <el-button @click="bookDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitBook" :loading="submitting">确定</el-button>
       </template>
-      <el-form label-width="120px" class="actions-form">
-        <el-form-item label="图书条码">
-          <el-input v-model="actionForm.barcode" placeholder="请输入图书条码" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="danger" @click="handleDiscard">报废图书</el-button>
-        </el-form-item>
-        <el-form-item label="图书ID">
-          <el-input type="number" v-model="actionForm.bookId" placeholder="请输入图书ID" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="warning" @click="handleWithdraw">下架图书</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+    </el-dialog>
+
+    <!-- 副本管理弹窗 -->
+    <el-dialog
+      v-model="copiesDialogVisible"
+      title="副本管理"
+      width="700px"
+      @close="resetCopiesForm"
+    >
+      <div class="book-basic-info" v-if="currentBook">
+        <el-descriptions :column="2" border size="small">
+          <el-descriptions-item label="ISBN">{{ currentBook.isbn }}</el-descriptions-item>
+          <el-descriptions-item label="书名">{{ currentBook.bname }}</el-descriptions-item>
+          <el-descriptions-item label="作者">{{ currentBook.author }}</el-descriptions-item>
+          <el-descriptions-item label="出版社">{{ currentBook.publisher }}</el-descriptions-item>
+        </el-descriptions>
+      </div>
+
+      <div class="add-copy-form">
+        <el-input
+          v-model="copyForm.barCode"
+          placeholder="请输入条码号"
+          clearable
+          class="copy-barcode-input"
+        />
+        <el-input
+          v-model="copyForm.place"
+          placeholder="请输入藏书位置"
+          clearable
+          class="copy-place-input"
+        />
+        <el-button type="primary" @click="addCopy" :disabled="!copyForm.barCode || !copyForm.place">新增副本</el-button>
+      </div>
+
+      <el-table
+        :data="copiesList"
+        border
+        v-loading="copiesLoading"
+        class="copies-table"
+      >
+        <el-table-column prop="barCode" label="条码号" width="180" />
+        <el-table-column prop="isbn" label="ISBN" width="150" />
+        <el-table-column prop="place" label="藏书位置" width="120" />
+        <el-table-column label="状态" width="80" align="center">
+          <template #default="scope">
+            <el-tag :type="scope.row.status === 'AVAILABLE' ? 'success' : 'info'">
+              {{ scope.row.status === 'AVAILABLE' ? '可用' : '已借出' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="120" fixed="right">
+          <template #default="scope">
+            <el-button 
+              size="small" 
+              type="danger" 
+              @click="cancelCopy(scope.row)"
+              :disabled="scope.row.status !== 'AVAILABLE'"
+            >
+              注销
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { reactive } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '../utils/request'
 
-const importForm = reactive({
+// 搜索相关
+const searchKeyword = ref('')
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
+const loading = ref(false)
+const bookList = ref([])
+
+// 图书表单弹窗
+const bookDialogVisible = ref(false)
+const isEdit = ref(false)
+const submitting = ref(false)
+const bookFormRef = ref(null)
+const bookForm = reactive({
+  id: null,
   isbn: '',
-  title: '',
+  bname: '',
   author: '',
   publisher: '',
   summary: '',
-  copyCount: 1,
-  location: ''
+  publishDate: '',
+  clc: ''
 })
 
-const actionForm = reactive({
-  barcode: '',
-  bookId: ''
+const bookRules = {
+  isbn: [{ required: true, message: '请输入ISBN', trigger: 'blur' }],
+  bname: [{ required: true, message: '请输入书名', trigger: 'blur' }],
+  author: [{ required: true, message: '请输入作者', trigger: 'blur' }],
+  publisher: [{ required: true, message: '请输入出版社', trigger: 'blur' }]
+}
+
+// 副本弹窗
+const copiesDialogVisible = ref(false)
+const copiesLoading = ref(false)
+const currentBook = ref(null)
+const copiesList = ref([])
+const copyForm = reactive({
+  barCode: '',
+  place: ''
 })
 
-const handleImport = async () => {
+// 初始化
+onMounted(() => {
+  searchBooks()
+})
+
+// 搜索图书
+const searchBooks = async () => {
+  loading.value = true
   try {
-    const response = await request.post('/acquisition/books', importForm)
+    const response = await request.get('/book/search', {
+      params: {
+        keyword: searchKeyword.value,
+        page: currentPage.value,
+        size: pageSize.value
+      }
+    })
     if (response.code === 200) {
-      ElMessage.success(response.message)
-      importForm.isbn = ''
-      importForm.title = ''
-      importForm.author = ''
-      importForm.publisher = ''
-      importForm.summary = ''
-      importForm.copyCount = 1
-      importForm.location = ''
-    } else {
-      ElMessage.error(response.message)
+      bookList.value = response.data.records || response.data || []
+      total.value = response.data.total || 0
     }
   } catch (error) {
-    ElMessage.error('入库失败')
+    ElMessage.error('搜索失败')
+  } finally {
+    loading.value = false
   }
 }
 
-const handleDiscard = async () => {
-  if (!actionForm.barcode) {
-    ElMessage.warning('请输入图书条码')
+// 分页
+const handleSizeChange = () => {
+  currentPage.value = 1
+  searchBooks()
+}
+
+const handleCurrentChange = () => {
+  searchBooks()
+}
+
+// 打开新增弹窗
+const openAddDialog = () => {
+  isEdit.value = false
+  bookDialogVisible.value = true
+}
+
+// 打开编辑弹窗
+const openEditDialog = (row) => {
+  isEdit.value = true
+  bookForm.id = row.id
+  bookForm.isbn = row.isbn
+  bookForm.bname = row.bname
+  bookForm.author = row.author
+  bookForm.publisher = row.publisher
+  bookForm.summary = row.summary || ''
+  bookForm.publishDate = row.publishDate || ''
+  bookForm.clc = row.clc || ''
+  bookDialogVisible.value = true
+}
+
+// 重置图书表单
+const resetBookForm = () => {
+  bookForm.id = null
+  bookForm.isbn = ''
+  bookForm.bname = ''
+  bookForm.author = ''
+  bookForm.publisher = ''
+  bookForm.summary = ''
+  bookForm.publishDate = ''
+  bookForm.clc = ''
+  bookFormRef.value?.resetFields()
+}
+
+// 提交图书
+const submitBook = async () => {
+  try {
+    await bookFormRef.value.validate()
+  } catch {
     return
   }
+
+  submitting.value = true
   try {
-    const response = await request.put(`/acquisition/books/${actionForm.barcode}/discard`)
+    const url = isEdit.value ? `/book/${bookForm.id}` : '/book'
+    const method = isEdit.value ? 'PUT' : 'POST'
+    const data = isEdit.value ? bookForm : bookForm
+    
+    const response = await request({
+      method,
+      url,
+      data
+    })
+    
     if (response.code === 200) {
-      ElMessage.success(response.message)
-      actionForm.barcode = ''
+      ElMessage.success(isEdit.value ? '编辑成功' : '新增成功')
+      bookDialogVisible.value = false
+      searchBooks()
     } else {
-      ElMessage.error(response.message)
+      ElMessage.error(response.message || '操作失败')
     }
   } catch (error) {
-    ElMessage.error('报废失败')
+    ElMessage.error('操作失败')
+  } finally {
+    submitting.value = false
   }
 }
 
-const handleWithdraw = async () => {
-  if (!actionForm.bookId) {
-    ElMessage.warning('请输入图书ID')
-    return
-  }
+// 下架
+const handleOffshelf = async (row) => {
   try {
-    const response = await request.put(`/acquisition/books/${actionForm.bookId}/withdraw`)
+    await ElMessageBox.confirm('确定要下架该图书吗?', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
+    const response = await request.put(`/book/${row.id}/offshelf`)
     if (response.code === 200) {
-      ElMessage.success(response.message)
-      actionForm.bookId = ''
+      ElMessage.success('下架成功')
+      searchBooks()
     } else {
-      ElMessage.error(response.message)
+      ElMessage.error(response.message || '下架失败')
+    }
+  } catch {
+    // 取消
+  }
+}
+
+// 上架
+const handleOnshelf = async (row) => {
+  try {
+    const response = await request.put(`/book/${row.id}/onshelf`)
+    if (response.code === 200) {
+      ElMessage.success('上架成功')
+      searchBooks()
+    } else {
+      ElMessage.error(response.message || '上架失败')
+    }
+  } catch {
+    // 
+  }
+}
+
+// 删除
+const handleDelete = async (row) => {
+  try {
+    await ElMessageBox.confirm('确定要删除该图书吗?', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
+    const response = await request.delete(`/book/${row.id}`)
+    if (response.code === 200) {
+      ElMessage.success('删除成功')
+      searchBooks()
+    } else {
+      ElMessage.error(response.message || '删除失败')
+    }
+  } catch {
+    // 取消
+  }
+}
+
+// 打开副本弹窗
+const openCopiesDialog = async (row) => {
+  currentBook.value = row
+  copiesDialogVisible.value = true
+  await loadCopies(row.isbn)
+}
+
+// 加载副本列表
+const loadCopies = async (isbn) => {
+  copiesLoading.value = true
+  try {
+    const response = await request.get(`/book/${isbn}/copies`)
+    if (response.code === 200) {
+      copiesList.value = response.data || []
     }
   } catch (error) {
-    ElMessage.error('下架失败')
+    ElMessage.error('加载副本失败')
+  } finally {
+    copiesLoading.value = false
+  }
+}
+
+// 重置副本表单
+const resetCopiesForm = () => {
+  copyForm.barCode = ''
+  copyForm.place = ''
+  copiesList.value = []
+  currentBook.value = null
+}
+
+// 新增副本
+const addCopy = async () => {
+  if (!currentBook.value) return
+  
+  try {
+    const response = await request.post(`/book/${currentBook.value.isbn}/copies`, {
+      barCode: copyForm.barCode,
+      place: copyForm.place
+    })
+    if (response.code === 200) {
+      ElMessage.success('新增成功')
+      await loadCopies(currentBook.value.isbn)
+      copyForm.barCode = ''
+      copyForm.place = ''
+    } else {
+      ElMessage.error(response.message || '新增失败')
+    }
+  } catch (error) {
+    ElMessage.error('新增失败')
+  }
+}
+
+// 注销副本
+const cancelCopy = async (row) => {
+  if (!currentBook.value) return
+  
+  try {
+    await ElMessageBox.confirm('确定要注销该副本吗?', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
+    const response = await request.put(`/book/${currentBook.value.isbn}/copies/${row.barCode}/cancel`)
+    if (response.code === 200) {
+      ElMessage.success('注销成功')
+      await loadCopies(currentBook.value.isbn)
+      searchBooks()
+    } else {
+      ElMessage.error(response.message || '注销失败')
+    }
+  } catch {
+    // 取消
   }
 }
 </script>
@@ -138,15 +476,48 @@ const handleWithdraw = async () => {
   border-radius: 8px;
 }
 
-.import-card {
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-area {
   margin-bottom: 20px;
 }
 
-.import-form {
-  max-width: 600px;
+.search-input {
+  max-width: 400px;
 }
 
-.actions-card {
-  max-width: 600px;
+.book-table {
+  margin-top: 10px;
+}
+
+.pagination {
+  margin-top: 20px;
+  text-align: right;
+}
+
+.book-basic-info {
+  margin-bottom: 20px;
+}
+
+.add-copy-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.copy-barcode-input {
+  width: 200px;
+}
+
+.copy-place-input {
+  width: 150px;
+}
+
+.copies-table {
+  margin-top: 10px;
 }
 </style>

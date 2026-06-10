@@ -1,4 +1,3 @@
-
 package com.library.mapper;
 
 import com.library.entity.Student;
@@ -9,10 +8,15 @@ import java.util.List;
 
 @Mapper
 public interface StudentMapper {
+    Student selectBySno(@Param("sno") String sno);
+
     Student selectById(@Param("id") Long id);
-    Student selectByStudentNo(@Param("studentNo") String studentNo);
+
     List<Student> selectAll();
+
     int insert(Student student);
-    int update(Student student);
-    int deleteById(@Param("id") Long id);
+
+    int updateById(Student student);
+
+    List<Student> searchByKeyword(@Param("keyword") String keyword);
 }

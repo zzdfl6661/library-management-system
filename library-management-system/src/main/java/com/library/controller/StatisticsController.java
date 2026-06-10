@@ -1,9 +1,9 @@
-
 package com.library.controller;
 
 import com.library.dto.response.ApiResponse;
 import com.library.dto.response.RankingResponse;
 import com.library.dto.response.StatisticsResponse;
+import com.library.entity.Book;
 import com.library.service.StatisticsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/statistics")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "*")
 public class StatisticsController {
 
     @Autowired
@@ -20,19 +20,28 @@ public class StatisticsController {
 
     @GetMapping("/dashboard")
     public ApiResponse<StatisticsResponse> getDashboard() {
-        StatisticsResponse response = statisticsService.getDashboardStatistics();
-        return ApiResponse.success(response);
+        StatisticsResponse stats = statisticsService.getStatistics();
+        return ApiResponse.success(stats);
     }
 
-    @GetMapping("/student-ranking")
-    public ApiResponse<List<RankingResponse>> getStudentRanking() {
-        List<RankingResponse> ranking = statisticsService.getStudentBorrowRanking();
-        return ApiResponse.success(ranking);
+    @GetMapping("/hot-books")
+    public ApiResponse<List<RankingResponse>> getHotBooks(
+            @RequestParam(defaultValue = "10") int limit) {
+        List<RankingResponse> hotBooks = statisticsService.getHotBooks(limit);
+        return ApiResponse.success(hotBooks);
     }
 
-    @GetMapping("/book-ranking")
-    public ApiResponse<List<RankingResponse>> getBookRanking() {
-        List<RankingResponse> ranking = statisticsService.getBookBorrowRanking();
-        return ApiResponse.success(ranking);
+    @GetMapping("/top-readers")
+    public ApiResponse<List<RankingResponse>> getTopReaders(
+            @RequestParam(defaultValue = "10") int limit) {
+        List<RankingResponse> topReaders = statisticsService.getTopReaders(limit);
+        return ApiResponse.success(topReaders);
+    }
+
+    @GetMapping("/new-books")
+    public ApiResponse<List<Book>> getNewBooks(
+            @RequestParam(defaultValue = "10") int limit) {
+        List<Book> newBooks = statisticsService.getNewBooks(limit);
+        return ApiResponse.success(newBooks);
     }
 }

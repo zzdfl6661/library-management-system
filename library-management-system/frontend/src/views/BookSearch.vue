@@ -1,116 +1,126 @@
-
 <template>
   <div class="book-search">
     <div class="search-header">
-      <el-input v-model="searchForm.keyword" placeholder="请输入书名、作者、ISBN或出版社" class="search-input" @keyup.enter="handleSearch" />
-      <el-button type="primary" @click="handleSearch">搜索</el-button>
+      <el-input v-model="keyword" placeholder="请输入书名、作者、ISBN或出版社" class="search-input" @keyup.enter="handleSearch" />
+      <el-button type="primary" @click="handleSearch">检索</el-button>
     </div>
-    <el-table :data="books" border class="book-table">
-      <el-table-column prop="id" label="图书ID" width="100" />
-      <el-table-column prop="title" label="书名" />
-      <el-table-column prop="author" label="作者" />
-      <el-table-column prop="publisher" label="出版社" />
-      <el-table-column prop="isbn" label="ISBN" />
-      <el-table-column prop="copyCount" label="副本数" width="100" />
-      <el-table-column prop="availableCount" label="可借数" width="100" />
-      <el-table-column label="操作" width="180">
+
+    <el-table :data="books" border class="book-table" v-loading="loading" @row-click="handleRowClick">
+      <el-table-column prop="isbn" label="ISBN" width="150" />
+      <el-table-column prop="title" label="书名" min-width="150" />
+      <el-table-column prop="author" label="作者" width="120" />
+      <el-table-column prop="publisher" label="出版社" width="150" />
+      <el-table-column prop="copyCount" label="副本数" width="100" align="center" />
+      <el-table-column prop="availableCount" label="可借数" width="100" align="center">
         <template #default="scope">
-          <el-button type="text" @click="viewDetail(scope.row.id)">查看详情</el-button>
-          <el-button v-if="role === 'STUDENT'" type="primary" size="small" @click="showBorrowDialog(scope.row)">借阅</el-button>
+          <span :class="getAvailableClass(scope.row.availableCount)">{{ scope.row.availableCount }}</span>
         </template>
       </el-table-column>
     </el-table>
-    
-    <el-dialog title="借阅图书" :visible.sync="borrowDialogVisible" width="400px">
-      <el-form :model="borrowForm" label-width="100px">
-        <el-form-item label="借书证号">
-          <el-input v-model="borrowForm.cardNo" placeholder="请输入借书证号" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="borrowDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="confirmBorrow">确认借阅</el-button>
-      </template>
-    </el-dialog>
+
+    <div class="pagination-container" v-if="total > 0">
+      <el-pagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :total="total"
+        :page-sizes="[10, 20, 50, 100]"
+        layout="total, sizes, prev, pager, next, jumper"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ref, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import request from '../utils/request'
 
 const router = useRouter()
+const route = useRoute()
+
+const keyword = ref('')
 const books = ref([])
-const searchForm = reactive({
-  keyword: ''
-})
-const role = ref(localStorage.getItem('role') || '')
-const borrowDialogVisible = ref(false)
-const borrowForm = reactive({
-  cardNo: ''
-})
-const currentBook = ref(null)
+const loading = ref(false)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 
-const handleSearch = async () => {
+const getAvailableClass = (count) => {
+  if (count > 0) return 'available-high'
+  return 'available-zero'
+}
+
+const handleSearch = () => {
+  currentPage.value = 1
+  fetchBooks()
+}
+
+const handleRowClick = (row) => {
+  router.push(`/books/${row.id}`)
+}
+
+const fetchBooks = async () => {
+  loading.value = true
   try {
-    const response = await request.get('/books/search', {
-      params: {
-        keyword: searchForm.keyword
-      }
-    })
-    if (response.code === 200) {
-      books.value = response.data
-    }
-  } catch (error) {
-    console.error('搜索失败:', error)
-  }
-}
-
-const viewDetail = (id) => {
-  router.push(`/books/${id}`)
-}
-
-const showBorrowDialog = (book) => {
-  if (book.availableCount <= 0) {
-    ElMessage.warning('该书暂无可借副本')
-    return
-  }
-  currentBook.value = book
-  borrowForm.cardNo = ''
-  borrowDialogVisible.value = true
-}
-
-const confirmBorrow = async () => {
-  if (!borrowForm.cardNo || !borrowForm.cardNo.trim()) {
-    ElMessage.warning('请输入借书证号')
-    return
-  }
-  if (!currentBook.value) {
-    ElMessage.error('请选择图书')
-    return
-  }
-  try {
-    const response = await request.post('/borrow/card', {
-      bookId: currentBook.value.id,
-      cardNo: borrowForm.cardNo.trim()
-    })
-    if (response.code === 200) {
-      ElMessage.success(response.message)
-      borrowDialogVisible.value = false
-      handleSearch()
+    let response
+    if (keyword.value.trim()) {
+      response = await request.get('/book/search', {
+        params: { keyword: keyword.value.trim() }
+      })
     } else {
-      ElMessage.error(response.message)
+      response = await request.get('/book/onshelf', {
+        params: { page: currentPage.value, size: pageSize.value }
+      })
+    }
+    
+    if (response.code === 200) {
+      if (keyword.value.trim() && Array.isArray(response.data)) {
+        books.value = response.data
+        total.value = response.data.length
+      } else if (response.data.records) {
+        books.value = response.data.records
+        total.value = response.data.total
+      } else if (Array.isArray(response.data)) {
+        books.value = response.data
+        total.value = response.data.length
+      } else {
+        books.value = []
+        total.value = 0
+      }
     }
   } catch (error) {
-    const errorMsg = error.response?.data?.message || '借阅失败'
-    ElMessage.error(errorMsg)
+    console.error('获取图书列表失败:', error)
+    books.value = []
+    total.value = 0
+  } finally {
+    loading.value = false
   }
+}
+
+const handleSizeChange = (val) => {
+  pageSize.value = val
+  fetchBooks()
+}
+
+const handleCurrentChange = (val) => {
+  currentPage.value = val
+  fetchBooks()
 }
 
 onMounted(() => {
-  handleSearch()
+  if (route.query.keyword) {
+    keyword.value = route.query.keyword
+  }
+  fetchBooks()
+})
+
+watch(() => route.query.keyword, (newKeyword) => {
+  if (newKeyword) {
+    keyword.value = newKeyword
+    handleSearch()
+  }
 })
 </script>
 
@@ -134,5 +144,26 @@ onMounted(() => {
 
 .book-table {
   margin-top: 10px;
+  cursor: pointer;
+}
+
+.book-table :deep(.el-table__row:hover) {
+  background-color: #f5f7fa;
+}
+
+.available-high {
+  color: #13ce66;
+  font-weight: bold;
+}
+
+.available-zero {
+  color: #f56c6c;
+  font-weight: bold;
+}
+
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
 }
 </style>

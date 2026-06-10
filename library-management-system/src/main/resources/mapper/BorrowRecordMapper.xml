@@ -1,54 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
-"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.library.mapper.BorrowRecordMapper">
-    <select id="selectById" resultType="com.library.entity.BorrowRecord">
-        SELECT * FROM borrow_record WHERE id = #{id}
+    <resultMap id="BaseResultMap" type="com.library.entity.BorrowRecord">
+        <id column="serNum" property="serNum"/>
+        <result column="sno" property="sno"/>
+        <result column="barCode" property="barCode"/>
+        <result column="borDate" property="borDate"/>
+        <result column="retDate" property="retDate"/>
+        <result column="realRetDate" property="realRetDate"/>
+        <result column="retStatus" property="retStatus"/>
+        <result column="ovdDays" property="ovdDays"/>
+        <result column="fineMoney" property="fineMoney"/>
+        <result column="fineStatus" property="fineStatus"/>
+        <result column="paySerNum" property="paySerNum"/>
+    </resultMap>
+
+    <select id="selectBySerNum" resultMap="BaseResultMap">
+        SELECT * FROM borrowrec WHERE serNum = #{serNum}
     </select>
-    <select id="selectByCardId" resultType="com.library.entity.BorrowRecord">
-        SELECT * FROM borrow_record WHERE card_id = #{cardId}
+
+    <select id="selectBySno" resultMap="BaseResultMap">
+        SELECT * FROM borrowrec WHERE sno = #{sno}
     </select>
-    <select id="selectByCardIdAndMonth" resultType="com.library.entity.BorrowRecord">
-        SELECT * FROM borrow_record 
-        WHERE card_id = #{cardId} 
-          AND borrow_date &gt;= #{startDate} 
-          AND borrow_date &lt;= #{endDate}
+
+    <select id="selectUnreturnedBySno" resultMap="BaseResultMap">
+        SELECT * FROM borrowrec WHERE sno = #{sno} AND retStatus = '未归还'
     </select>
-    <select id="selectByCopyId" resultType="com.library.entity.BorrowRecord">
-        SELECT * FROM borrow_record WHERE copy_id = #{copyId} AND return_date IS NULL
+
+    <select id="selectByBarCode" resultMap="BaseResultMap">
+        SELECT * FROM borrowrec WHERE barCode = #{barCode}
     </select>
-    <select id="selectByStudentId" resultType="com.library.entity.BorrowRecord">
-        SELECT br.* FROM borrow_record br 
-        JOIN library_card lc ON br.card_id = lc.id 
-        WHERE lc.student_id = #{studentId}
+
+    <select id="selectByBarCodeAndUnreturned" resultMap="BaseResultMap">
+        SELECT * FROM borrowrec WHERE barCode = #{barCode} AND retStatus = '未归还'
     </select>
-    <select id="selectUnreturnedByCardId" resultType="com.library.entity.BorrowRecord">
-        SELECT * FROM borrow_record WHERE card_id = #{cardId} AND return_date IS NULL
-    </select>
-    <select id="selectCountByCardId" resultType="java.lang.Integer">
-        SELECT COUNT(*) FROM borrow_record WHERE card_id = #{cardId} AND return_date IS NULL
-    </select>
-    <select id="selectCountByStudentIdAndMonth" resultType="java.lang.Integer">
-        SELECT COUNT(*) FROM borrow_record br 
-        JOIN library_card lc ON br.card_id = lc.id 
-        WHERE lc.student_id = #{studentId} 
-        AND br.borrow_date &gt;= #{startDate} AND br.borrow_date &lt;= #{endDate}
-    </select>
-    <select id="selectUnreturnedByStudentId" resultType="com.library.entity.BorrowRecord">
-        SELECT br.* FROM borrow_record br 
-        JOIN library_card lc ON br.card_id = lc.id 
-        WHERE lc.student_id = #{studentId} AND br.return_date IS NULL
-    </select>
-    <insert id="insert" parameterType="com.library.entity.BorrowRecord">
-        INSERT INTO borrow_record (card_id, copy_id, borrow_date, due_date, is_overdue, create_time)
-        VALUES (#{cardId}, #{copyId}, #{borrowDate}, #{dueDate}, #{isOverdue}, #{createTime})
+
+    <insert id="insert" parameterType="com.library.entity.BorrowRecord" useGeneratedKeys="true" keyProperty="serNum">
+        INSERT INTO borrowrec (sno, barCode, borDate, retDate, realRetDate, retStatus, ovdDays, fineMoney, fineStatus, paySerNum)
+        VALUES (#{sno}, #{barCode}, #{borDate}, #{retDate}, #{realRetDate}, #{retStatus}, #{ovdDays}, #{fineMoney}, #{fineStatus}, #{paySerNum})
     </insert>
-    <update id="update" parameterType="com.library.entity.BorrowRecord">
-        UPDATE borrow_record SET card_id = #{cardId}, copy_id = #{copyId}, 
-               borrow_date = #{borrowDate}, due_date = #{dueDate}, 
-               return_date = #{returnDate}, is_overdue = #{isOverdue} WHERE id = #{id}
+
+    <update id="updateBySerNum" parameterType="com.library.entity.BorrowRecord">
+        UPDATE borrowrec
+        SET sno = #{sno},
+            barCode = #{barCode},
+            borDate = #{borDate},
+            retDate = #{retDate},
+            realRetDate = #{realRetDate},
+            retStatus = #{retStatus},
+            ovdDays = #{ovdDays},
+            fineMoney = #{fineMoney},
+            fineStatus = #{fineStatus},
+            paySerNum = #{paySerNum}
+        WHERE serNum = #{serNum}
     </update>
-    <delete id="deleteById">
-        DELETE FROM borrow_record WHERE id = #{id}
-    </delete>
+
+    <select id="countBySno" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM borrowrec WHERE sno = #{sno} AND retStatus = '未归还'
+    </select>
+
+    <select id="selectUnpaidBySno" resultMap="BaseResultMap">
+        SELECT * FROM borrowrec WHERE sno = #{sno} AND fineStatus = '未缴' AND fineMoney > 0
+    </select>
+
+    <select id="selectAllBySno" resultMap="BaseResultMap">
+        SELECT * FROM borrowrec WHERE sno = #{sno} ORDER BY borDate DESC
+    </select>
 </mapper>

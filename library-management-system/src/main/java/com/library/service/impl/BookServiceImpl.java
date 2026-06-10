@@ -1,24 +1,22 @@
 
 package com.library.service.impl;
 
-import com.library.dto.request.BookCreateRequest;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.library.dto.response.BookDetailResponse;
 import com.library.entity.Book;
 import com.library.entity.BookCopy;
 import com.library.enums.BookCopyStatus;
+import com.library.enums.BookStatus;
 import com.library.exception.BusinessException;
 import com.library.mapper.BookCopyMapper;
 import com.library.mapper.BookMapper;
 import com.library.service.BookService;
-import com.library.util.BarcodeGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,90 +29,127 @@ public class BookServiceImpl implements BookService {
     private BookCopyMapper bookCopyMapper;
 
     @Override
-    public BookDetailResponse getBookDetail(Long id) {
-        Book book = bookMapper.selectById(id);
+    public Book getBookByIsbn(String isbn) {
+        Book book = bookMapper.selectByIsbn(isbn);
         if (book == null) {
             throw new BusinessException("图书不存在");
-        }
-        List<BookCopy> copies = bookCopyMapper.selectByBookId(id);
-        BookDetailResponse response = new BookDetailResponse();
-        response.setId(book.getId());
-        response.setIsbn(book.getIsbn());
-        response.setTitle(book.getTitle());
-        response.setAuthor(book.getAuthor());
-        response.setPublisher(book.getPublisher());
-        response.setSummary(book.getSummary());
-        response.setCopies(copies.stream().map(copy -> {
-            BookDetailResponse.CopyInfo info = new BookDetailResponse.CopyInfo();
-            info.setId(copy.getId());
-            info.setBarcode(copy.getBarcode());
-            info.setLocation(copy.getLocation());
-            info.setStatus(copy.getStatus());
-            return info;
-        }).collect(Collectors.toList()));
-        return response;
-    }
-
-    @Override
-    public List<Map<String, Object>> searchBooksWithStats(String keyword) {
-        List<Book> books = bookMapper.searchByKeyword(keyword);
-        return books.stream().map(book -> {
-            Map<String, Object> map = new java.util.HashMap<String, Object>();
-            map.put("id", book.getId());
-            map.put("isbn", book.getIsbn());
-            map.put("title", book.getTitle());
-            map.put("author", book.getAuthor());
-            map.put("publisher", book.getPublisher());
-            List<BookCopy> copies = bookCopyMapper.selectByBookId(book.getId());
-            map.put("copyCount", copies.size());
-            long availableCount = copies.stream()
-                    .filter(c -> BookCopyStatus.AVAILABLE.name().equals(c.getStatus()))
-                    .count();
-            map.put("availableCount", availableCount);
-            return map;
-        }).collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
-    public Book createBook(BookCreateRequest request) {
-        Book existingBook = bookMapper.selectByIsbn(request.getIsbn());
-        Book book;
-        if (existingBook != null) {
-            book = existingBook;
-        } else {
-            book = new Book();
-            book.setIsbn(request.getIsbn());
-            book.setTitle(request.getTitle());
-            book.setAuthor(request.getAuthor());
-            book.setPublisher(request.getPublisher());
-            book.setSummary(request.getSummary());
-            book.setCreateTime(LocalDateTime.now());
-            bookMapper.insert(book);
-        }
-        if (request.getCopyCount() != null && request.getCopyCount() > 0) {
-            List<BookCopy> existingCopies = bookCopyMapper.selectByBookId(book.getId());
-            int startSequence = existingCopies.size() + 1;
-            for (int i = 0; i < request.getCopyCount(); i++) {
-                BookCopy copy = new BookCopy();
-                copy.setBookId(book.getId());
-                copy.setBarcode(BarcodeGenerator.generateBarcode(request.getIsbn(), startSequence + i));
-                copy.setLocation(request.getLocation());
-                copy.setStatus(BookCopyStatus.AVAILABLE.name());
-                copy.setCreateTime(LocalDateTime.now());
-                bookCopyMapper.insert(copy);
-            }
         }
         return book;
     }
 
     @Override
-    public Book getByIsbn(String isbn) {
-        return bookMapper.selectByIsbn(isbn);
+    public Book getBookById(Long id) {
+        Book book = bookMapper.selectById(id);
+        if (book == null) {
+            throw new BusinessException("图书不存在");
+        }
+        return book;
     }
 
     @Override
-    public List<Book> getAllBooks() {
-        return bookMapper.selectAll();
+    public List<Book> searchBooks(String keyword) {
+        return bookMapper.selectByKeyword(keyword);
+    }
+
+    @Override
+    public List<Book> getOnShelfBooks() {
+        return bookMapper.selectOnShelf();
+    }
+
+    @Override
+    public IPage<Book> getOnShelfBooksPage(int page, int size) {
+        Page<Book> pageParam = new Page<>(page, size);
+        return bookMapper.selectOnShelfPage(pageParam);
+    }
+
+    @Override
+    @Transactional
+    public void createBook(Book book) {
+        Book existingBook = bookMapper.selectByIsbn(book.getIsbn());
+        if (existingBook != null) {
+            throw new BusinessException("图书已存在");
+        }
+        book.setBookStatus(BookStatus.ONSHELF);
+        bookMapper.insert(book);
+    }
+
+    @Override
+    @Transactional
+    public void updateBook(Book book) {
+        Book existingBook = bookMapper.selectById(book.getId());
+        if (existingBook == null) {
+            throw new BusinessException("图书不存在");
+        }
+        if (existingBook.getBookStatus() == BookStatus.DELETED) {
+            throw new BusinessException("图书已删除，无法编辑");
+        }
+        bookMapper.updateById(book);
+    }
+
+    @Override
+    @Transactional
+    public void offshelfBook(Long id) {
+        Book book = bookMapper.selectById(id);
+        if (book == null) {
+            throw new BusinessException("图书不存在");
+        }
+        if (book.getBookStatus() == BookStatus.DELETED) {
+            throw new BusinessException("图书已删除，无法下架");
+        }
+        book.setBookStatus(BookStatus.OFFSHELF);
+        bookMapper.updateById(book);
+    }
+
+    @Override
+    @Transactional
+    public void onshelfBook(Long id) {
+        Book book = bookMapper.selectById(id);
+        if (book == null) {
+            throw new BusinessException("图书不存在");
+        }
+        if (book.getBookStatus() == BookStatus.DELETED) {
+            throw new BusinessException("图书已删除，无法上架");
+        }
+        book.setBookStatus(BookStatus.ONSHELF);
+        bookMapper.updateById(book);
+    }
+
+    @Override
+    @Transactional
+    public void deleteBook(Long id) {
+        Book book = bookMapper.selectById(id);
+        if (book == null) {
+            throw new BusinessException("图书不存在");
+        }
+        book.setBookStatus(BookStatus.DELETED);
+        bookMapper.updateById(book);
+    }
+
+    @Override
+    public BookDetailResponse getBookDetail(Long id) {
+        Book book = bookMapper.selectById(id);
+        if (book == null) {
+            throw new BusinessException("图书不存在");
+        }
+        List<BookCopy> copies = bookCopyMapper.selectByIsbn(book.getIsbn());
+        
+        BookDetailResponse response = new BookDetailResponse();
+        response.setId(Long.valueOf(book.getId()));
+        response.setIsbn(book.getIsbn());
+        response.setTitle(book.getBname());
+        response.setAuthor(book.getAuthor());
+        response.setPublisher(book.getPublisher());
+        response.setSummary(book.getIntroduction());
+        response.setCopies(copies.stream()
+                .filter(c -> c.getStatus() != BookCopyStatus.CANCELLED)
+                .map(copy -> {
+                    BookDetailResponse.CopyInfo info = new BookDetailResponse.CopyInfo();
+                    info.setId(Long.valueOf(copy.getIsbn().hashCode()));
+                    info.setBarcode(copy.getBarCode());
+                    info.setLocation(copy.getPlace());
+                    info.setStatus(copy.getStatus().name());
+                    return info;
+                }).collect(Collectors.toList()));
+        return response;
     }
 }

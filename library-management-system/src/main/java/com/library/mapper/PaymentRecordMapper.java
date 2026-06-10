@@ -1,4 +1,3 @@
-
 package com.library.mapper;
 
 import com.library.entity.PaymentRecord;
@@ -9,9 +8,9 @@ import java.util.List;
 
 @Mapper
 public interface PaymentRecordMapper {
-    PaymentRecord selectById(@Param("id") Long id);
-    List<PaymentRecord> selectByStudentId(@Param("studentId") Long studentId);
+    List<PaymentRecord> selectBySno(@Param("sno") String sno);
+
     int insert(PaymentRecord record);
-    int update(PaymentRecord record);
-    int deleteById(@Param("id") Long id);
+
+    Integer selectMaxSerNum();
 }

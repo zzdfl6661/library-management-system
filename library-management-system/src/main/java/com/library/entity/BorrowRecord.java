@@ -1,19 +1,32 @@
-
 package com.library.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.library.enums.FineStatus;
+import com.library.enums.RetStatus;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@TableName("borrowrec")
 public class BorrowRecord {
-    private Long id;
-    private Long cardId;
-    private Long copyId;
-    private LocalDate borrowDate;
-    private LocalDate dueDate;
-    private LocalDate returnDate;
-    private Integer isOverdue;
-    private LocalDateTime createTime;
+    @TableId(type = IdType.AUTO)
+    private Integer serNum;
+    private String sno;
+    private String barCode;
+    private LocalDate borDate;
+    private LocalDate retDate;
+    private LocalDate realRetDate;
+    private RetStatus retStatus;
+    private Integer ovdDays;
+    private BigDecimal fineMoney;
+    private FineStatus fineStatus;
+    private Integer paySerNum;
 }

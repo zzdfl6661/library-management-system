@@ -1,25 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
-"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.library.mapper.StudentMapper">
-    <select id="selectById" resultType="com.library.entity.Student">
+    <resultMap id="BaseResultMap" type="com.library.entity.Student">
+        <id column="id" property="id"/>
+        <result column="sno" property="sno"/>
+        <result column="username" property="username"/>
+        <result column="type" property="type"/>
+        <result column="collage" property="collage"/>
+        <result column="major" property="major"/>
+        <result column="birth" property="birth"/>
+        <result column="originPlace" property="originPlace"/>
+        <result column="password" property="password"/>
+        <result column="gender" property="gender"/>
+        <result column="className" property="className"/>
+        <result column="idCard" property="idCard"/>
+    </resultMap>
+
+    <select id="selectBySno" resultMap="BaseResultMap">
+        SELECT * FROM student WHERE sno = #{sno}
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
         SELECT * FROM student WHERE id = #{id}
     </select>
-    <select id="selectByStudentNo" resultType="com.library.entity.Student">
-        SELECT * FROM student WHERE student_no = #{studentNo}
-    </select>
-    <select id="selectAll" resultType="com.library.entity.Student">
+
+    <select id="selectAll" resultMap="BaseResultMap">
         SELECT * FROM student
     </select>
-    <insert id="insert" parameterType="com.library.entity.Student">
-        INSERT INTO student (student_no, name, type, max_borrow_count, create_time)
-        VALUES (#{studentNo}, #{name}, #{type}, #{maxBorrowCount}, #{createTime})
+
+    <select id="searchByKeyword" resultMap="BaseResultMap">
+        SELECT * FROM student
+        WHERE sno LIKE CONCAT('%', #{keyword}, '%')
+           OR username LIKE CONCAT('%', #{keyword}, '%')
+    </select>
+
+    <insert id="insert" parameterType="com.library.entity.Student" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO student (sno, username, type, collage, major, birth, originPlace, password, gender, className, idCard)
+        VALUES (#{sno}, #{username}, #{type}, #{collage}, #{major}, #{birth}, #{originPlace}, #{password}, #{gender}, #{className}, #{idCard})
     </insert>
-    <update id="update" parameterType="com.library.entity.Student">
-        UPDATE student SET student_no = #{studentNo}, name = #{name}, 
-               type = #{type}, max_borrow_count = #{maxBorrowCount} WHERE id = #{id}
+
+    <update id="updateById" parameterType="com.library.entity.Student">
+        UPDATE student
+        SET sno = #{sno},
+            username = #{username},
+            type = #{type},
+            collage = #{collage},
+            major = #{major},
+            birth = #{birth},
+            originPlace = #{originPlace},
+            password = #{password},
+            gender = #{gender},
+            className = #{className},
+            idCard = #{idCard}
+        WHERE id = #{id}
     </update>
-    <delete id="deleteById">
-        DELETE FROM student WHERE id = #{id}
-    </delete>
 </mapper>

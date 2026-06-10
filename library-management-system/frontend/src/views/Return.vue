@@ -1,107 +1,97 @@
-
 <template>
   <div class="return-page">
     <el-card class="return-card">
       <template #header>
         <span>还书操作</span>
       </template>
-      <div class="form-section">
-        <el-form-item label="借书证号">
-          <el-input v-model="returnForm.cardNo" placeholder="请扫描或输入借书证号" @change="checkCard" />
-        </el-form-item>
-        <div v-if="cardInfo" class="card-info">
-          <p>学生ID：{{ cardInfo.studentId }}</p>
-          <p>状态：<span :class="cardInfo.status === 'NORMAL' ? 'text-success' : 'text-danger'">{{ getCardStatusText(cardInfo.status) }}</span></p>
-        </div>
+      
+      <div class="return-form">
+        <el-form label-width="120px">
+          <el-form-item label="图书条码">
+            <el-input 
+              v-model="barCode" 
+              placeholder="请扫描或输入图书条码" 
+              @keyup.enter="handleReturn"
+              clearable
+              class="barcode-input"
+            >
+              <template #append>
+                <el-button @click="handleReturn" :loading="returning" :disabled="!barCode">确认</el-button>
+              </template>
+            </el-input>
+          </el-form-item>
+        </el-form>
       </div>
-      <div class="form-section">
-        <el-form-item label="图书条码">
-          <el-input v-model="returnForm.barcode" placeholder="请扫描或输入图书条码" @change="checkBook" />
-        </el-form-item>
-        <div v-if="bookInfo" class="book-info">
-          <p>书名：{{ bookInfo.title }}</p>
-          <p>借阅日期：{{ bookInfo.borrowDate }}</p>
-          <p>应还日期：{{ bookInfo.dueDate }}</p>
-          <p v-if="bookInfo.isOverdue" class="text-danger">已超期 {{ bookInfo.overdueDays }} 天</p>
-        </div>
+
+      <div v-if="returnResult" class="return-result">
+        <el-alert
+          :title="returnResult.message"
+          :type="returnResult.success ? 'success' : 'error'"
+          :closable="false"
+          show-icon
+          class="mb-20"
+        />
+        
+        <el-descriptions v-if="returnResult.success" :column="2" border>
+          <el-descriptions-item label="超期天数">
+            <span :class="returnResult.ovdDays > 0 ? 'text-danger' : ''">
+              {{ returnResult.ovdDays || 0 }} 天
+            </span>
+          </el-descriptions-item>
+          <el-descriptions-item label="罚款金额">
+            <span v-if="returnResult.fineMoney > 0" class="text-danger">
+              ¥{{ returnResult.fineMoney.toFixed(2) }}
+            </span>
+            <span v-else class="text-success">无</span>
+          </el-descriptions-item>
+        </el-descriptions>
       </div>
-      <el-button type="primary" @click="handleReturn" :disabled="!canSubmit">确认还书</el-button>
     </el-card>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import request from '../utils/request'
 
-const returnForm = reactive({
-  cardNo: '',
-  barcode: ''
-})
+const barCode = ref('')
+const returning = ref(false)
+const returnResult = ref(null)
 
-const cardInfo = ref(null)
-const bookInfo = ref(null)
-
-const canSubmit = computed(() => {
-  return returnForm.cardNo && returnForm.barcode && cardInfo.value && bookInfo.value
-})
-
-const getCardStatusText = (status) => {
-  const texts = {
-    'NORMAL': '正常',
-    'LOST': '挂失',
-    'CANCELLED': '注销'
-  }
-  return texts[status] || status
-}
-
-const checkCard = async () => {
-  if (!returnForm.cardNo) return
-  try {
-    const response = await request.get(`/cards/${returnForm.cardNo}`)
-    if (response.code === 200) {
-      cardInfo.value = response.data
-    }
-  } catch (error) {
-    cardInfo.value = null
-    ElMessage.error('借书证不存在')
-  }
-}
-
-const checkBook = async () => {
-  if (!returnForm.barcode) return
-  try {
-    const response = await request.get(`/borrow/check/${returnForm.barcode}`)
-    if (response.code === 200) {
-      bookInfo.value = response.data
-    } else {
-      bookInfo.value = null
-      ElMessage.error(response.message)
-    }
-  } catch (error) {
-    bookInfo.value = null
-    ElMessage.error('无法查询图书信息')
-  }
-}
-
+// 还书
 const handleReturn = async () => {
+  if (!barCode.value) {
+    ElMessage.warning('请输入图书条码')
+    return
+  }
+
+  returning.value = true
+  returnResult.value = null
+  
   try {
-    const response = await request.post('/borrow/return', {
-      cardNo: returnForm.cardNo,
-      barcode: returnForm.barcode
-    })
+    const response = await request.post('/borrow/return', { barCode: barCode.value })
     if (response.code === 200) {
-      ElMessage.success(response.message)
-      returnForm.cardNo = ''
-      returnForm.barcode = ''
-      cardInfo.value = null
-      bookInfo.value = null
+      returnResult.value = {
+        success: true,
+        message: '还书成功',
+        ovdDays: response.data?.ovdDays || 0,
+        fineMoney: response.data?.fineMoney || 0
+      }
+      barCode.value = ''
     } else {
-      ElMessage.error(response.message)
+      returnResult.value = {
+        success: false,
+        message: response.message || '还书失败'
+      }
     }
   } catch (error) {
-    ElMessage.error('还书失败')
+    returnResult.value = {
+      success: false,
+      message: '还书失败，请稍后重试'
+    }
+  } finally {
+    returning.value = false
   }
 }
 </script>
@@ -117,18 +107,27 @@ const handleReturn = async () => {
   max-width: 600px;
 }
 
-.form-section {
-  margin: 15px 0;
+.return-form {
+  margin-bottom: 20px;
 }
 
-.book-info {
-  margin-top: 10px;
-  padding: 10px;
-  background: #f5f5f5;
-  border-radius: 4px;
+.barcode-input {
+  max-width: 400px;
+}
+
+.return-result {
+  margin-top: 20px;
+}
+
+.mb-20 {
+  margin-bottom: 20px;
 }
 
 .text-danger {
   color: #f56c6c;
+}
+
+.text-success {
+  color: #13ce66;
 }
 </style>

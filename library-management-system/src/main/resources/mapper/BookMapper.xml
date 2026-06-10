@@ -1,41 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
-"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.library.mapper.BookMapper">
-    <select id="selectById" resultType="com.library.entity.Book">
+    <resultMap id="BaseResultMap" type="com.library.entity.Book">
+        <id column="id" property="id"/>
+        <result column="ISBN" property="ISBN"/>
+        <result column="bname" property="bname"/>
+        <result column="author" property="author"/>
+        <result column="publisher" property="publisher"/>
+        <result column="introduction" property="introduction"/>
+        <result column="pubDate" property="pubDate"/>
+        <result column="clcNum" property="clcNum"/>
+        <result column="bookStatus" property="bookStatus"/>
+    </resultMap>
+
+    <select id="selectByIsbn" resultMap="BaseResultMap">
+        SELECT * FROM book WHERE ISBN = #{ISBN}
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
         SELECT * FROM book WHERE id = #{id}
     </select>
-    <select id="selectByIsbn" resultType="com.library.entity.Book">
-        SELECT * FROM book WHERE isbn = #{isbn}
+
+    <select id="selectByKeyword" resultMap="BaseResultMap">
+        SELECT * FROM book
+        WHERE bname LIKE CONCAT('%', #{keyword}, '%')
+           OR author LIKE CONCAT('%', #{keyword}, '%')
+           OR ISBN LIKE CONCAT('%', #{keyword}, '%')
     </select>
-    <select id="search" resultType="com.library.entity.Book">
-        SELECT * FROM book WHERE 1=1
-        <if test="title != null and title != ''">AND title LIKE CONCAT('%', #{title}, '%')</if>
-        <if test="author != null and author != ''">AND author LIKE CONCAT('%', #{author}, '%')</if>
-        <if test="isbn != null and isbn != ''">AND isbn LIKE CONCAT('%', #{isbn}, '%')</if>
-        <if test="publisher != null and publisher != ''">AND publisher LIKE CONCAT('%', #{publisher}, '%')</if>
-    </select>
-    <select id="searchByKeyword" resultType="com.library.entity.Book">
-        SELECT * FROM book WHERE 1=1
-        <if test="keyword != null and keyword != ''">
-            AND (title LIKE CONCAT('%', #{keyword}, '%')
-                 OR author LIKE CONCAT('%', #{keyword}, '%')
-                 OR isbn LIKE CONCAT('%', #{keyword}, '%')
-                 OR publisher LIKE CONCAT('%', #{keyword}, '%'))
-        </if>
-    </select>
-    <select id="selectAll" resultType="com.library.entity.Book">
+
+    <select id="selectAll" resultMap="BaseResultMap">
         SELECT * FROM book
     </select>
-    <insert id="insert" parameterType="com.library.entity.Book">
-        INSERT INTO book (isbn, title, author, publisher, summary, create_time)
-        VALUES (#{isbn}, #{title}, #{author}, #{publisher}, #{summary}, #{createTime})
+
+    <select id="selectOnShelf" resultMap="BaseResultMap">
+        SELECT * FROM book WHERE bookStatus = 1
+    </select>
+
+    <insert id="insert" parameterType="com.library.entity.Book" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO book (ISBN, bname, author, publisher, introduction, pubDate, clcNum, bookStatus)
+        VALUES (#{ISBN}, #{bname}, #{author}, #{publisher}, #{introduction}, #{pubDate}, #{clcNum}, #{bookStatus})
     </insert>
-    <update id="update" parameterType="com.library.entity.Book">
-        UPDATE book SET isbn = #{isbn}, title = #{title}, author = #{author}, 
-               publisher = #{publisher}, summary = #{summary} WHERE id = #{id}
+
+    <update id="updateById" parameterType="com.library.entity.Book">
+        UPDATE book
+        SET ISBN = #{ISBN},
+            bname = #{bname},
+            author = #{author},
+            publisher = #{publisher},
+            introduction = #{introduction},
+            pubDate = #{pubDate},
+            clcNum = #{clcNum},
+            bookStatus = #{bookStatus}
+        WHERE id = #{id}
     </update>
-    <delete id="deleteById">
-        DELETE FROM book WHERE id = #{id}
-    </delete>
 </mapper>

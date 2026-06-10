@@ -1,13 +1,12 @@
-
 package com.library.service.impl;
 
 import com.library.dto.request.LoginRequest;
 import com.library.dto.response.LoginResponse;
-import com.library.entity.SysUser;
-import com.library.entity.Student;
+import com.library.entity.Admin;
+import com.library.entity.LibraryCard;
 import com.library.exception.BusinessException;
-import com.library.mapper.StudentMapper;
-import com.library.mapper.SysUserMapper;
+import com.library.mapper.AdminMapper;
+import com.library.mapper.LibraryCardMapper;
 import com.library.service.AuthService;
 import com.library.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,68 +16,72 @@ import org.springframework.stereotype.Service;
 public class AuthServiceImpl implements AuthService {
 
     @Autowired
-    private SysUserMapper sysUserMapper;
+    private AdminMapper adminMapper;
 
     @Autowired
-    private StudentMapper studentMapper;
+    private LibraryCardMapper libraryCardMapper;
 
     @Autowired
     private JwtUtil jwtUtil;
 
     @Override
-    public LoginResponse login(LoginRequest request) {
+    public LoginResponse adminLogin(LoginRequest request) {
         String username = request.getUsername();
         String password = request.getPassword();
-        
-        SysUser user = sysUserMapper.selectByUsername(username);
-        
-        if (user == null && isStudentNo(username)) {
-            user = findUserByStudentNo(username);
-        }
-        
-        if (user == null) {
+
+        Admin admin = adminMapper.selectByUsername(username);
+        if (admin == null) {
             throw new BusinessException("用户名或密码错误");
         }
-        if (!password.equals(user.getPassword())) {
+        if (!password.equals(admin.getPassword())) {
             throw new BusinessException("用户名或密码错误");
         }
-        String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
+
+        String role = admin.getAdminType() != null ? admin.getAdminType().name() : "ADMIN";
+        String token = jwtUtil.generateToken(Long.valueOf(admin.getId()), username, role);
+
         LoginResponse response = new LoginResponse();
-        response.setId(user.getId());
-        response.setUsername(user.getUsername());
-        response.setRole(user.getRole());
+        response.setId(Long.valueOf(admin.getId()));
+        response.setUsername(username);
+        response.setRole(role);
         response.setToken(token);
-        
-        if ("STUDENT".equals(user.getRole())) {
-            String studentNo = getStudentNo(user, username);
-            response.setStudentNo(studentNo);
-        }
-        
+
         return response;
     }
-    
-    private boolean isStudentNo(String username) {
-        return username.matches("^20\\d{6}$");
+
+    @Override
+    public LoginResponse readerLogin(String cardNo, String password) {
+        LibraryCard card = libraryCardMapper.selectByCardNo(cardNo);
+        if (card == null) {
+            throw new BusinessException("借书证号或密码错误");
+        }
+        if (!password.equals(card.getPassword())) {
+            throw new BusinessException("借书证号或密码错误");
+        }
+
+        String token = jwtUtil.generateToken(Long.valueOf(card.getCardNo().hashCode()), card.getSno(), "READER");
+
+        LoginResponse response = new LoginResponse();
+        response.setId(Long.valueOf(card.getCardNo().hashCode()));
+        response.setUsername(card.getSname());
+        response.setRole("READER");
+        response.setToken(token);
+        response.setStudentNo(card.getSno());
+
+        return response;
     }
-    
-    private SysUser findUserByStudentNo(String studentNo) {
-        Student student = studentMapper.selectByStudentNo(studentNo);
-        if (student != null) {
-            int num = Integer.parseInt(studentNo.substring(6));
-            String username = "student" + num;
-            return sysUserMapper.selectByUsername(username);
+
+    @Override
+    public Long verifyToken(String token) {
+        if (token == null || token.isEmpty()) {
+            return null;
         }
-        return null;
-    }
-    
-    private String getStudentNo(SysUser user, String loginUsername) {
-        if (isStudentNo(loginUsername)) {
-            return loginUsername;
+        if (!jwtUtil.validateToken(token)) {
+            return null;
         }
-        if (user.getUsername().startsWith("student")) {
-            String num = user.getUsername().substring(7);
-            return "202100" + num;
+        if (jwtUtil.isTokenExpired(token)) {
+            return null;
         }
-        return user.getUsername();
+        return jwtUtil.extractId(token);
     }
 }

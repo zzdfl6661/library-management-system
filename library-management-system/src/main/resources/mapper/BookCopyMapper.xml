@@ -1,31 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
-"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.library.mapper.BookCopyMapper">
-    <select id="selectById" resultType="com.library.entity.BookCopy">
-        SELECT * FROM book_copy WHERE id = #{id}
+    <resultMap id="BaseResultMap" type="com.library.entity.BookCopy">
+        <id column="barCode" property="barCode"/>
+        <result column="ISBN" property="ISBN"/>
+        <result column="place" property="place"/>
+        <result column="status" property="status"/>
+        <result column="oldStatus" property="oldStatus"/>
+    </resultMap>
+
+    <select id="selectByBarCode" resultMap="BaseResultMap">
+        SELECT * FROM bookcopy WHERE barCode = #{barCode}
     </select>
-    <select id="selectByBarcode" resultType="com.library.entity.BookCopy">
-        SELECT * FROM book_copy WHERE barcode = #{barcode}
+
+    <select id="selectByIsbn" resultMap="BaseResultMap">
+        SELECT * FROM bookcopy WHERE ISBN = #{ISBN}
     </select>
-    <select id="selectByBookId" resultType="com.library.entity.BookCopy">
-        SELECT * FROM book_copy WHERE book_id = #{bookId}
+
+    <select id="selectByIsbnAndStatus" resultMap="BaseResultMap">
+        SELECT * FROM bookcopy WHERE ISBN = #{ISBN} AND status = #{status}
     </select>
-    <select id="selectByStatus" resultType="com.library.entity.BookCopy">
-        SELECT * FROM book_copy WHERE status = #{status}
+
+    <select id="selectAvailableByIsbn" resultMap="BaseResultMap">
+        SELECT * FROM bookcopy WHERE ISBN = #{ISBN} AND status = 1
     </select>
+
     <insert id="insert" parameterType="com.library.entity.BookCopy">
-        INSERT INTO book_copy (book_id, barcode, location, status, create_time)
-        VALUES (#{bookId}, #{barcode}, #{location}, #{status}, #{createTime})
+        INSERT INTO bookcopy (barCode, ISBN, place, status, oldStatus)
+        VALUES (#{barCode}, #{ISBN}, #{place}, #{status}, #{oldStatus})
     </insert>
-    <update id="update" parameterType="com.library.entity.BookCopy">
-        UPDATE book_copy SET book_id = #{bookId}, barcode = #{barcode}, 
-               location = #{location}, status = #{status} WHERE id = #{id}
-    </update>
-    <delete id="deleteById">
-        DELETE FROM book_copy WHERE id = #{id}
-    </delete>
-    <update id="updateStatusByBookId">
-        UPDATE book_copy SET status = #{status} WHERE book_id = #{bookId}
+
+    <update id="updateByBarCode" parameterType="com.library.entity.BookCopy">
+        UPDATE bookcopy
+        SET ISBN = #{ISBN},
+            place = #{place},
+            status = #{status},
+            oldStatus = #{oldStatus}
+        WHERE barCode = #{barCode}
     </update>
 </mapper>

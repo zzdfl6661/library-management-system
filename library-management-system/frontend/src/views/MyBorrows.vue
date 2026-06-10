@@ -1,63 +1,97 @@
-
 <template>
   <div class="my-borrows">
-    <div v-if="paidFines.length > 0" class="paid-fines-box">
-      <h3>已还款记录</h3>
-      <el-table :data="paidFines" border>
-        <el-table-column prop="bookTitle" label="关联图书" />
-        <el-table-column prop="fineAmount" label="还款金额" formatter="¥{0}" />
-        <el-table-column prop="createTime" label="还款时间" />
-      </el-table>
-    </div>
-    
+    <el-card class="summary-card">
+      <div class="summary-row">
+        <span class="label">当前未缴纳罚款总金额：</span>
+        <span class="amount">¥{{ unpaidFinesTotal }}</span>
+      </div>
+    </el-card>
+
     <div class="tabs">
       <el-tabs v-model="activeTab">
         <el-tab-pane label="当前借阅" name="current">
-          <el-table :data="currentBorrows" border>
-            <el-table-column prop="bookTitle" label="书名" />
-            <el-table-column prop="barcode" label="条码" />
-            <el-table-column prop="borrowDate" label="借阅日期" />
-            <el-table-column prop="dueDate" label="应还日期" />
-            <el-table-column label="状态">
+          <el-table :data="currentBorrows" border stripe>
+            <el-table-column type="index" label="序号" width="60" />
+            <el-table-column prop="bookTitle" label="书名" min-width="150" />
+            <el-table-column prop="author" label="作者" min-width="100" />
+            <el-table-column prop="borrowDate" label="借书日期" width="110" />
+            <el-table-column prop="dueDate" label="应还日期" width="110" />
+            <el-table-column prop="actualReturnDate" label="实际还书日期" width="120">
               <template #default="scope">
-                <span :class="isOverdue(scope.row) ? 'text-danger' : 'text-warning'">
-                  {{ isOverdue(scope.row) ? '已超期' : '借阅中' }}
+                {{ scope.row.actualReturnDate || '-' }}
+              </template>
+            </el-table-column>
+            <el-table-column label="还书状态" width="100">
+              <template #default="scope">
+                <span :class="getStatusClass(scope.row)">
+                  {{ getStatusText(scope.row) }}
                 </span>
               </template>
             </el-table-column>
-            <el-table-column label="罚款状态">
+            <el-table-column label="罚款金额" width="100">
               <template #default="scope">
-                <div v-if="scope.row.hasFine === 1" class="fine-info">
-                  <span :class="scope.row.finePaid === 1 ? 'text-success' : 'text-danger'">
-                    {{ scope.row.finePaid === 1 ? '已还款' : '待还款' }}
+                <span v-if="scope.row.fineAmount > 0" :class="scope.row.finePaid ? 'text-success' : 'text-danger'">
+                  ¥{{ scope.row.fineAmount }}
+                </span>
+                <span v-else class="text-gray">-</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="罚款状态" width="100">
+              <template #default="scope">
+                <span v-if="scope.row.fineAmount > 0">
+                  <span :class="scope.row.finePaid ? 'text-success' : 'text-danger'">
+                    {{ scope.row.finePaid ? '已缴纳' : '未缴纳' }}
                   </span>
-                  <span v-if="scope.row.finePaid === 0" class="fine-amount">
-                    ¥{{ scope.row.fineAmount }}
-                  </span>
-                </div>
+                </span>
                 <span v-else class="text-gray">无罚款</span>
               </template>
             </el-table-column>
           </el-table>
         </el-tab-pane>
         <el-tab-pane label="借阅历史" name="history">
-          <el-table :data="historyBorrows" border>
-            <el-table-column prop="bookTitle" label="书名" />
-            <el-table-column prop="barcode" label="条码" />
-            <el-table-column prop="borrowDate" label="借阅日期" />
-            <el-table-column prop="returnDate" label="归还日期" />
-            <el-table-column label="罚款状态">
+          <el-table :data="historyBorrows" border stripe>
+            <el-table-column type="index" label="序号" width="60" />
+            <el-table-column prop="bookTitle" label="书名" min-width="150" />
+            <el-table-column prop="author" label="作者" min-width="100" />
+            <el-table-column prop="borrowDate" label="借书日期" width="110" />
+            <el-table-column prop="dueDate" label="应还日期" width="110" />
+            <el-table-column prop="actualReturnDate" label="实际还书日期" width="120" />
+            <el-table-column label="还书状态" width="100">
               <template #default="scope">
-                <div v-if="scope.row.hasFine === 1" class="fine-info">
-                  <span :class="scope.row.finePaid === 1 ? 'text-success' : 'text-danger'">
-                    {{ scope.row.finePaid === 1 ? '已还款' : '待还款' }}
+                <span :class="getStatusClass(scope.row)">
+                  {{ getStatusText(scope.row) }}
+                </span>
+              </template>
+            </el-table-column>
+            <el-table-column label="罚款金额" width="100">
+              <template #default="scope">
+                <span v-if="scope.row.fineAmount > 0" :class="scope.row.finePaid ? 'text-success' : 'text-danger'">
+                  ¥{{ scope.row.fineAmount }}
+                </span>
+                <span v-else class="text-gray">-</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="罚款状态" width="100">
+              <template #default="scope">
+                <span v-if="scope.row.fineAmount > 0">
+                  <span :class="scope.row.finePaid ? 'text-success' : 'text-danger'">
+                    {{ scope.row.finePaid ? '已缴纳' : '未缴纳' }}
                   </span>
-                  <span class="fine-amount">¥{{ scope.row.fineAmount }}</span>
-                </div>
+                </span>
                 <span v-else class="text-gray">无罚款</span>
               </template>
             </el-table-column>
           </el-table>
+          <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :total="totalHistory"
+            :page-sizes="[10, 20, 50]"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="loadHistoryBorrows"
+            @current-change="loadHistoryBorrows"
+            class="pagination"
+          />
         </el-tab-pane>
       </el-tabs>
     </div>
@@ -65,44 +99,91 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import request from '../utils/request'
 
 const activeTab = ref('current')
-const allBorrows = ref([])
+const currentBorrows = ref([])
+const historyBorrows = ref([])
+const unpaidFinesTotal = ref('0.00')
+
+const currentPage = ref(1)
+const pageSize = ref(10)
+const totalHistory = ref(0)
 
 const isOverdue = (row) => {
-  if (!row.dueDate) return false
+  if (!row.dueDate || row.actualReturnDate) return false
   const dueDate = new Date(row.dueDate)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   return dueDate < today
 }
 
-const currentBorrows = computed(() => {
-  return allBorrows.value.filter(b => !b.returnDate)
-})
+const getStatusText = (row) => {
+  if (row.actualReturnDate) return '已归还'
+  if (isOverdue(row)) return '已超期'
+  return '借阅中'
+}
 
-const historyBorrows = computed(() => {
-  return allBorrows.value.filter(b => b.returnDate)
-})
+const getStatusClass = (row) => {
+  if (row.actualReturnDate) return 'text-success'
+  if (isOverdue(row)) return 'text-danger'
+  return 'text-warning'
+}
 
-const paidFines = computed(() => {
-  return allBorrows.value.filter(b => b.hasFine === 1 && b.finePaid === 1)
-})
-
-onMounted(async () => {
-  const studentNo = localStorage.getItem('studentNo') || localStorage.getItem('username')
+const loadCurrentBorrows = async () => {
+  const studentNo = localStorage.getItem('studentNo')
   if (!studentNo) return
-  
+
   try {
-    const response = await request.get(`/borrow/student/${studentNo}`)
+    const response = await request.get(`/borrow/student/${studentNo}/current`)
     if (response.code === 200) {
-      allBorrows.value = response.data || []
+      currentBorrows.value = response.data || []
     }
   } catch (error) {
-    console.error('获取借阅记录失败:', error)
+    console.error('获取当前借阅失败:', error)
   }
+}
+
+const loadHistoryBorrows = async () => {
+  const studentNo = localStorage.getItem('studentNo')
+  if (!studentNo) return
+
+  try {
+    const response = await request.get(`/borrow/student/${studentNo}`, {
+      params: {
+        page: currentPage.value,
+        size: pageSize.value
+      }
+    })
+    if (response.code === 200) {
+      historyBorrows.value = response.data?.records || []
+      totalHistory.value = response.data?.total || 0
+    }
+  } catch (error) {
+    console.error('获取借阅历史失败:', error)
+  }
+}
+
+const loadUnpaidFinesTotal = async () => {
+  const studentNo = localStorage.getItem('studentNo')
+  if (!studentNo) return
+
+  try {
+    const response = await request.get(`/fine/student/${studentNo}/total`)
+    if (response.code === 200) {
+      unpaidFinesTotal.value = response.data || '0.00'
+    }
+  } catch (error) {
+    console.error('获取未缴罚款总金额失败:', error)
+  }
+}
+
+onMounted(() => {
+  loadCurrentBorrows()
+  loadHistoryBorrows()
+  loadUnpaidFinesTotal()
 })
 </script>
 
@@ -111,6 +192,35 @@ onMounted(async () => {
   background: white;
   padding: 20px;
   border-radius: 8px;
+}
+
+.summary-card {
+  margin-bottom: 20px;
+  background: #fff3f3;
+  border-color: #f56c6c;
+}
+
+.summary-row {
+  display: flex;
+  align-items: center;
+}
+
+.label {
+  font-size: 16px;
+  color: #666;
+}
+
+.amount {
+  font-size: 24px;
+  color: #f56c6c;
+  font-weight: bold;
+  margin-left: 10px;
+}
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .text-danger {
@@ -127,29 +237,5 @@ onMounted(async () => {
 
 .text-gray {
   color: #909399;
-}
-
-.fine-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.fine-amount {
-  font-weight: bold;
-}
-
-.paid-fines-box {
-  background: #f0f9ff;
-  border: 1px solid #e0f2fe;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 20px;
-}
-
-.paid-fines-box h3 {
-  margin: 0 0 12px 0;
-  font-size: 16px;
-  color: #1f2937;
 }
 </style>
