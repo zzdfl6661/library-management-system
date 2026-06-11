@@ -7,10 +7,10 @@
       <el-descriptions :column="2" border v-if="profile">
         <el-descriptions-item label="学号">{{ profile.sno }}</el-descriptions-item>
         <el-descriptions-item label="姓名">{{ profile.sname }}</el-descriptions-item>
-        <el-descriptions-item label="性别">{{ profile.sex }}</el-descriptions-item>
-        <el-descriptions-item label="班级">{{ profile.class }}</el-descriptions-item>
+        <el-descriptions-item label="性别">{{ profile.gender }}</el-descriptions-item>
+        <el-descriptions-item label="班级">{{ profile.className }}</el-descriptions-item>
         <el-descriptions-item label="借书证号">{{ profile.cardNo }}</el-descriptions-item>
-        <el-descriptions-item label="联系方式">{{ profile.tel }}</el-descriptions-item>
+        <el-descriptions-item label="学院">{{ profile.collage }}</el-descriptions-item>
       </el-descriptions>
     </el-card>
 
@@ -73,18 +73,37 @@ const passwordRules = {
 }
 
 const loadProfile = async () => {
-  const cardNo = localStorage.getItem('cardNo')
   const studentNo = localStorage.getItem('studentNo')
+  const token = localStorage.getItem('token')
   
-  if (!cardNo || !studentNo) {
+  console.log('=== 调试信息 ===')
+  console.log('studentNo:', studentNo)
+  console.log('token:', token)
+  
+  if (!studentNo) {
     ElMessage.error('请先登录')
     return
   }
 
   try {
+    console.log('发起请求:', `/card/student/${studentNo}`)
     const response = await request.get(`/card/student/${studentNo}`)
+    console.log('响应数据:', response)
+    
     if (response.code === 200) {
-      profile.value = response.data
+      const data = response.data
+      console.log('data.student:', data.student)
+      console.log('data.card:', data.card)
+      
+      profile.value = {
+        sno: data.student?.sno || '',
+        sname: data.student?.username || '',
+        gender: data.student?.gender || '',
+        className: data.student?.className || '',
+        cardNo: data.card?.cardNo || '',
+        collage: data.student?.collage || ''
+      }
+      console.log('profile.value:', profile.value)
     }
   } catch (error) {
     console.error('获取个人信息失败:', error)

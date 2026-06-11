@@ -223,4 +223,18 @@ public class LibraryCardServiceImpl implements LibraryCardService {
         }
         return null;
     }
+
+    @Override
+    @Transactional
+    public void updatePassword(String cardNo, String oldPassword, String newPassword) {
+        LibraryCard card = libraryCardMapper.selectByCardNo(cardNo);
+        if (card == null) {
+            throw new BusinessException("借书证不存在");
+        }
+        if (!oldPassword.equals(card.getPassword())) {
+            throw new BusinessException("旧密码错误");
+        }
+        card.setPassword(newPassword);
+        libraryCardMapper.updateByCardNo(card);
+    }
 }

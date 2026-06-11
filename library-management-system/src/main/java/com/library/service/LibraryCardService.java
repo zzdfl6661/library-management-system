@@ -32,4 +32,6 @@ public interface LibraryCardService {
     List<LibraryCard> getAllCards();
 
     List<LibraryCard> searchCards(String keyword);
+
+    void updatePassword(String cardNo, String oldPassword, String newPassword);
 }

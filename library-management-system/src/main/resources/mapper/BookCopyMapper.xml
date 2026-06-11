@@ -28,14 +28,14 @@
 
     <insert id="insert" parameterType="com.library.entity.BookCopy">
         INSERT INTO bookcopy (barCode, ISBN, place, status, oldStatus)
-        VALUES (#{barCode}, #{ISBN}, #{place}, #{status}, #{oldStatus})
+        VALUES (#{barCode}, #{ISBN}, #{place}, #{status.code}, #{oldStatus})
     </insert>
 
     <update id="updateByBarCode" parameterType="com.library.entity.BookCopy">
         UPDATE bookcopy
         SET ISBN = #{ISBN},
             place = #{place},
-            status = #{status},
+            status = #{status.code},
             oldStatus = #{oldStatus}
         WHERE barCode = #{barCode}
     </update>

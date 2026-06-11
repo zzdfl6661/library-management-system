@@ -14,6 +14,7 @@ import Return from '../views/Return.vue'
 import BookImport from '../views/BookImport.vue'
 import MyBorrows from '../views/MyBorrows.vue'
 import MyFines from '../views/MyFines.vue'
+import MyProfile from '../views/MyProfile.vue'
 
 const routes = [
   { path: '/login', component: Login },
@@ -33,6 +34,7 @@ const routes = [
       { path: 'circulation/borrow', component: Borrow, meta: { role: 'CIRCULATION' } },
       { path: 'circulation/return', component: Return, meta: { role: 'CIRCULATION' } },
       { path: 'acquisition/books', component: BookImport, meta: { role: 'ACQUISITION' } },
+      { path: 'myprofile', component: MyProfile },
       { path: 'myborrows', component: MyBorrows },
       { path: 'myfines', component: MyFines }
     ]

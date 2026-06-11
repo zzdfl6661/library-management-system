@@ -51,6 +51,8 @@ public class BorrowServiceImpl implements BorrowService {
     @Autowired
     private StudentMapper studentMapper;
 
+    private static final BigDecimal MAX_FINE_ALLOWED = new BigDecimal("50.00");
+
     @Override
     public String canBorrow(String cardNo) {
         LibraryCard card = libraryCardMapper.selectByCardNo(cardNo);
@@ -64,6 +66,11 @@ public class BorrowServiceImpl implements BorrowService {
         Student student = studentMapper.selectBySno(card.getSno());
         if (student == null) {
             return "学生不存在";
+        }
+        
+        BigDecimal unpaidFine = borrowRecordMapper.sumUnpaidFineBySno(card.getSno());
+        if (unpaidFine != null && unpaidFine.compareTo(MAX_FINE_ALLOWED) > 0) {
+            return "累计超期罚款（¥" + unpaidFine + "）超过50元，暂时无法借书";
         }
         
         int borrowedCount = borrowRecordMapper.countBySno(card.getSno());
@@ -142,13 +149,16 @@ public class BorrowServiceImpl implements BorrowService {
         record.setBorDate(today);
         record.setRetDate(retDate);
         record.setRetStatus(RetStatus.UNRETURNED);
-        
+        record.setOvdDays(0);
+        record.setFineMoney(BigDecimal.ZERO);
+
         borrowRecordMapper.insert(record);
-        
+
+        bookCopy.setOldStatus(bookCopy.getStatus().getCode());
         bookCopy.setStatus(BookCopyStatus.BORROWED);
         bookCopyMapper.updateByBarCode(bookCopy);
-        
-        card.setTimes(card.getTimes() + 1);
+
+        card.setTimes((card.getTimes() != null ? card.getTimes() : 0) + 1);
         libraryCardMapper.updateByCardNo(card);
     }
 
@@ -192,14 +202,17 @@ public class BorrowServiceImpl implements BorrowService {
             record.setBorDate(today);
             record.setRetDate(retDate);
             record.setRetStatus(RetStatus.UNRETURNED);
-            
+            record.setOvdDays(0);
+            record.setFineMoney(BigDecimal.ZERO);
+
             borrowRecordMapper.insert(record);
-            
+
+            bookCopy.setOldStatus(bookCopy.getStatus().getCode());
             bookCopy.setStatus(BookCopyStatus.BORROWED);
             bookCopyMapper.updateByBarCode(bookCopy);
         }
-        
-        card.setTimes(card.getTimes() + barCodes.size());
+
+        card.setTimes((card.getTimes() != null ? card.getTimes() : 0) + barCodes.size());
         libraryCardMapper.updateByCardNo(card);
     }
 

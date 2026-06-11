@@ -21,7 +21,11 @@
         <el-table-column prop="author" label="作者" min-width="100" />
         <el-table-column prop="borDate" label="借书日期" width="110" />
         <el-table-column prop="retDate" label="应还日期" width="110" />
-        <el-table-column prop="realRetDate" label="实还日期" width="110" />
+        <el-table-column prop="realRetDate" label="实还日期" width="110">
+          <template #default="scope">
+            {{ scope.row.realRetDate || '-' }}
+          </template>
+        </el-table-column>
         <el-table-column label="罚款金额" width="100">
           <template #default="scope">
             <span class="text-danger">¥{{ scope.row.fineMoney }}</span>
@@ -47,7 +51,6 @@
       </div>
       <div class="payment-actions">
         <el-button type="primary" @click="handlePaySelected" :loading="loading">支付选中</el-button>
-        <el-button @click="handlePayAll" :loading="loading">支付全部</el-button>
       </div>
     </el-card>
   </div>
@@ -110,40 +113,6 @@ const handlePaySelected = async () => {
       serNums: serNums,
       amount: parseFloat(selectedAmount.value)
     })
-
-    if (response.code === 200) {
-      ElMessage.success('支付成功')
-      selectedFines.value = []
-      loadUnpaidFines()
-    } else {
-      ElMessage.error(response.message || '支付失败')
-    }
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('支付失败:', error)
-      ElMessage.error('支付失败')
-    }
-  } finally {
-    loading.value = false
-  }
-}
-
-const handlePayAll = async () => {
-  if (unpaidFines.value.length === 0) {
-    ElMessage.warning('没有未支付的罚款记录')
-    return
-  }
-
-  try {
-    await ElMessageBox.confirm(
-      `确定要支付全部 ${unpaidFines.value.length} 条罚款记录，总金额 ¥${unpaidTotal.value} 吗？`,
-      '确认支付',
-      { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
-    )
-
-    loading.value = true
-    const studentNo = localStorage.getItem('studentNo')
-    const response = await request.post(`/fine/pay/all/${studentNo}`)
 
     if (response.code === 200) {
       ElMessage.success('支付成功')

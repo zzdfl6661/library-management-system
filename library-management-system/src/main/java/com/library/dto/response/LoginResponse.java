@@ -10,4 +10,5 @@ public class LoginResponse {
     private String role;
     private String token;
     private String studentNo;
+    private String cardNo;
 }

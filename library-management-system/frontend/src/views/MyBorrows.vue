@@ -7,110 +7,70 @@
       </div>
     </el-card>
 
-    <div class="tabs">
-      <el-tabs v-model="activeTab">
-        <el-tab-pane label="当前借阅" name="current">
-          <el-table :data="currentBorrows" border stripe>
-            <el-table-column type="index" label="序号" width="60" />
-            <el-table-column prop="bookTitle" label="书名" min-width="150" />
-            <el-table-column prop="author" label="作者" min-width="100" />
-            <el-table-column prop="borDate" label="借书日期" width="110" />
-            <el-table-column prop="retDate" label="应还日期" width="110" />
-            <el-table-column prop="realRetDate" label="实际还书日期" width="120">
-              <template #default="scope">
-                {{ scope.row.realRetDate || '-' }}
-              </template>
-            </el-table-column>
-            <el-table-column label="还书状态" width="100">
-              <template #default="scope">
-                <span :class="getStatusClass(scope.row)">
-                  {{ getStatusText(scope.row) }}
-                </span>
-              </template>
-            </el-table-column>
-            <el-table-column label="罚款金额" width="100">
-              <template #default="scope">
-                <span v-if="scope.row.fineMoney > 0" :class="scope.row.fineStatus === '已缴' ? 'text-success' : 'text-danger'">
-                  ¥{{ scope.row.fineMoney }}
-                </span>
-                <span v-else class="text-gray">-</span>
-              </template>
-            </el-table-column>
-            <el-table-column label="罚款状态" width="100">
-              <template #default="scope">
-                <span v-if="scope.row.fineMoney > 0">
-                  <span :class="scope.row.fineStatus === '已缴' ? 'text-success' : 'text-danger'">
-                    {{ scope.row.fineStatus === '已缴' ? '已缴纳' : '未缴纳' }}
-                  </span>
-                </span>
-                <span v-else class="text-gray">无罚款</span>
-              </template>
-            </el-table-column>
-          </el-table>
-        </el-tab-pane>
-        <el-tab-pane label="借阅历史" name="history">
-          <el-table :data="historyBorrows" border stripe>
-            <el-table-column type="index" label="序号" width="60" />
-            <el-table-column prop="bookTitle" label="书名" min-width="150" />
-            <el-table-column prop="author" label="作者" min-width="100" />
-            <el-table-column prop="borDate" label="借书日期" width="110" />
-            <el-table-column prop="retDate" label="应还日期" width="110" />
-            <el-table-column prop="realRetDate" label="实际还书日期" width="120" />
-            <el-table-column label="还书状态" width="100">
-              <template #default="scope">
-                <span :class="getStatusClass(scope.row)">
-                  {{ getStatusText(scope.row) }}
-                </span>
-              </template>
-            </el-table-column>
-            <el-table-column label="罚款金额" width="100">
-              <template #default="scope">
-                <span v-if="scope.row.fineMoney > 0" :class="scope.row.fineStatus === '已缴' ? 'text-success' : 'text-danger'">
-                  ¥{{ scope.row.fineMoney }}
-                </span>
-                <span v-else class="text-gray">-</span>
-              </template>
-            </el-table-column>
-            <el-table-column label="罚款状态" width="100">
-              <template #default="scope">
-                <span v-if="scope.row.fineMoney > 0">
-                  <span :class="scope.row.fineStatus === '已缴' ? 'text-success' : 'text-danger'">
-                    {{ scope.row.fineStatus === '已缴' ? '已缴纳' : '未缴纳' }}
-                  </span>
-                </span>
-                <span v-else class="text-gray">无罚款</span>
-              </template>
-            </el-table-column>
-          </el-table>
-          <el-pagination
-            v-model:current-page="currentPage"
-            v-model:page-size="pageSize"
-            :total="totalHistory"
-            :page-sizes="[10, 20, 50]"
-            layout="total, sizes, prev, pager, next, jumper"
-            @size-change="loadHistoryBorrows"
-            @current-change="loadHistoryBorrows"
-            class="pagination"
-          />
-        </el-tab-pane>
-      </el-tabs>
-    </div>
+    <el-card class="borrow-list">
+      <template #header>
+        <span>借阅记录</span>
+      </template>
+      <el-table :data="borrowRecords" border stripe>
+        <el-table-column type="index" label="序号" width="60" />
+        <el-table-column prop="bookTitle" label="书名" min-width="150" />
+        <el-table-column prop="author" label="作者" min-width="100" />
+        <el-table-column prop="borDate" label="借书日期" width="110" />
+        <el-table-column prop="retDate" label="应还日期" width="110" />
+        <el-table-column prop="realRetDate" label="实际还书日期" width="120">
+          <template #default="scope">
+            {{ scope.row.realRetDate || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="还书状态" width="100">
+          <template #default="scope">
+            <span :class="getStatusClass(scope.row)">
+              {{ getStatusText(scope.row) }}
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column label="罚款金额" width="100">
+          <template #default="scope">
+            <span v-if="scope.row.fineMoney > 0" :class="scope.row.fineStatus === '已缴' ? 'text-success' : 'text-danger'">
+              ¥{{ scope.row.fineMoney }}
+            </span>
+            <span v-else class="text-gray">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="罚款状态" width="100">
+          <template #default="scope">
+            <span v-if="scope.row.fineMoney > 0">
+              <span :class="scope.row.fineStatus === '已缴' ? 'text-success' : 'text-danger'">
+                {{ scope.row.fineStatus === '已缴' ? '已缴纳' : '未缴纳' }}
+              </span>
+            </span>
+            <span v-else class="text-gray">无罚款</span>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :total="totalRecords"
+        :page-sizes="[10, 20, 50]"
+        layout="total, sizes, prev, pager, next, jumper"
+        @size-change="loadBorrowRecords"
+        @current-change="loadBorrowRecords"
+        class="pagination"
+      />
+    </el-card>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, onMounted } from 'vue'
 import request from '../utils/request'
 
-const activeTab = ref('current')
-const currentBorrows = ref([])
-const historyBorrows = ref([])
+const borrowRecords = ref([])
 const unpaidFinesTotal = ref('0.00')
-
 const currentPage = ref(1)
 const pageSize = ref(10)
-const totalHistory = ref(0)
+const totalRecords = ref(0)
 
 const isOverdue = (row) => {
   if (!row.retDate || row.realRetDate) return false
@@ -132,21 +92,7 @@ const getStatusClass = (row) => {
   return 'text-warning'
 }
 
-const loadCurrentBorrows = async () => {
-  const studentNo = localStorage.getItem('studentNo')
-  if (!studentNo) return
-
-  try {
-    const response = await request.get(`/borrow/student/${studentNo}/current`)
-    if (response.code === 200) {
-      currentBorrows.value = response.data || []
-    }
-  } catch (error) {
-    console.error('获取当前借阅失败:', error)
-  }
-}
-
-const loadHistoryBorrows = async () => {
+const loadBorrowRecords = async () => {
   const studentNo = localStorage.getItem('studentNo')
   if (!studentNo) return
 
@@ -158,11 +104,11 @@ const loadHistoryBorrows = async () => {
       }
     })
     if (response.code === 200) {
-      historyBorrows.value = response.data?.records || []
-      totalHistory.value = response.data?.total || 0
+      borrowRecords.value = response.data?.records || []
+      totalRecords.value = response.data?.total || 0
     }
   } catch (error) {
-    console.error('获取借阅历史失败:', error)
+    console.error('获取借阅记录失败:', error)
   }
 }
 
@@ -181,8 +127,7 @@ const loadUnpaidFinesTotal = async () => {
 }
 
 onMounted(() => {
-  loadCurrentBorrows()
-  loadHistoryBorrows()
+  loadBorrowRecords()
   loadUnpaidFinesTotal()
 })
 </script>
@@ -215,6 +160,10 @@ onMounted(() => {
   color: #f56c6c;
   font-weight: bold;
   margin-left: 10px;
+}
+
+.borrow-list {
+  margin-top: 20px;
 }
 
 .pagination {

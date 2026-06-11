@@ -54,4 +54,7 @@ public interface BorrowRecordMapper {
 
     @Select("SELECT COUNT(*) FROM borrowrec WHERE DATE(retDate) = DATE(#{date})")
     int countByRetDate(@Param("date") LocalDate date);
+
+    @Select("SELECT COALESCE(SUM(fineMoney), 0) FROM borrowrec WHERE sno = #{sno} AND fineStatus = 'UNPAID'")
+    java.math.BigDecimal sumUnpaidFineBySno(@Param("sno") String sno);
 }

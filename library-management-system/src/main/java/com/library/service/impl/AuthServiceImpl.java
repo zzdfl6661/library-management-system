@@ -71,14 +71,15 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException("借书证号或密码错误");
         }
 
-        String token = jwtUtil.generateToken(Long.valueOf(card.getCardNo().hashCode()), card.getSno(), "READER");
+        String token = jwtUtil.generateToken(Long.valueOf(card.getCardNo().hashCode()), card.getSno(), "STUDENT");
 
         LoginResponse response = new LoginResponse();
         response.setId(Long.valueOf(card.getCardNo().hashCode()));
         response.setUsername(card.getSname());
-        response.setRole("READER");
+        response.setRole("STUDENT");
         response.setToken(token);
         response.setStudentNo(card.getSno());
+        response.setCardNo(card.getCardNo());
 
         return response;
     }

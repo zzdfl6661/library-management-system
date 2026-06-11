@@ -56,7 +56,6 @@ public class FineServiceImpl implements FineService {
         BigDecimal fineAmount = record.getFineMoney();
 
         record.setFineStatus(FineStatus.PAID);
-        record.setFineMoney(BigDecimal.ZERO);
         borrowRecordMapper.updateBySerNum(record);
 
         PaymentRecord payment = new PaymentRecord();
@@ -105,7 +104,6 @@ public class FineServiceImpl implements FineService {
             if (remaining.compareTo(record.getFineMoney()) >= 0) {
                 remaining = remaining.subtract(record.getFineMoney());
                 record.setFineStatus(FineStatus.PAID);
-                record.setFineMoney(BigDecimal.ZERO);
             } else {
                 record.setFineMoney(record.getFineMoney().subtract(remaining));
                 remaining = BigDecimal.ZERO;

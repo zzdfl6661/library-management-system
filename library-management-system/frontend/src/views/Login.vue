@@ -56,8 +56,8 @@
       
       <div class="tips">
         <p>管理员账号：office / circulation / acquisition</p>
-        <p>学生账号：student1 / student2 / student3 或使用学号登录</p>
-        <p>学生学号示例：2021001 / 2021002 / 2021003</p>
+        <p>读者登录：使用借书证号和密码</p>
+        <p>测试账号：借书证号 C001 / C002 / C003</p>
         <p>密码统一为：123456</p>
       </div>
     </div>
@@ -115,7 +115,8 @@ const handleLogin = async () => {
       localStorage.setItem('role', response.data.role)
       localStorage.setItem('userId', response.data.id)
       if (response.data.role === 'STUDENT') {
-        localStorage.setItem('studentNo', response.data.username || response.data.studentNo)
+        localStorage.setItem('studentNo', response.data.studentNo)
+        localStorage.setItem('cardNo', response.data.cardNo)
       } else if (response.data.studentNo) {
         localStorage.setItem('studentNo', response.data.studentNo)
       }

@@ -37,8 +37,10 @@
     </select>
 
     <insert id="insert" parameterType="com.library.entity.BorrowRecord" useGeneratedKeys="true" keyProperty="serNum">
-        INSERT INTO borrowrec (sno, barCode, borDate, retDate, realRetDate, retStatus, ovdDays, fineMoney, fineStatus, paySerNum)
-        VALUES (#{sno}, #{barCode}, #{borDate}, #{retDate}, #{realRetDate}, #{retStatus}, #{ovdDays}, #{fineMoney}, #{fineStatus}, #{paySerNum})
+        INSERT INTO borrowrec (sno, barCode, borDate, retDate, realRetDate, retStatus, ovdDays, fineMoney, paySerNum
+            <if test="fineStatus != null">, fineStatus</if>)
+        VALUES (#{sno}, #{barCode}, #{borDate}, #{retDate}, #{realRetDate}, #{retStatus.status}, #{ovdDays}, #{fineMoney}, #{paySerNum}
+            <if test="fineStatus != null">, #{fineStatus.status}</if>)
     </insert>
 
     <update id="updateBySerNum" parameterType="com.library.entity.BorrowRecord">
@@ -48,10 +50,10 @@
             borDate = #{borDate},
             retDate = #{retDate},
             realRetDate = #{realRetDate},
-            retStatus = #{retStatus},
+            retStatus = #{retStatus.status},
             ovdDays = #{ovdDays},
             fineMoney = #{fineMoney},
-            fineStatus = #{fineStatus},
+            <if test="fineStatus != null">fineStatus = #{fineStatus.status},</if>
             paySerNum = #{paySerNum}
         WHERE serNum = #{serNum}
     </update>

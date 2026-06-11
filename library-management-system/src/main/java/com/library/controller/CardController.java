@@ -118,4 +118,16 @@ public class CardController {
         List<CardRecord> records = cardRecordService.getRecordsBySno(sno);
         return ApiResponse.success(records);
     }
+
+    @PutMapping("/reader/password")
+    public ApiResponse<Void> updateReaderPassword(@RequestBody Map<String, String> request) {
+        String cardNo = request.get("cardNo");
+        String oldPassword = request.get("oldPassword");
+        String newPassword = request.get("newPassword");
+        if (cardNo == null || oldPassword == null || newPassword == null) {
+            return ApiResponse.error(400, "参数不完整");
+        }
+        libraryCardService.updatePassword(cardNo, oldPassword, newPassword);
+        return ApiResponse.success("密码修改成功", null);
+    }
 }

@@ -20,6 +20,9 @@ request.interceptors.response.use(response => {
   return response.data
 }, error => {
   console.error('Request error:', error)
+  if (error.response && error.response.data) {
+    return Promise.resolve(error.response.data)
+  }
   return Promise.reject(error)
 })
 
